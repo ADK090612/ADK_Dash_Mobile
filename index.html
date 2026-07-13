@@ -3,9 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>학생 대시보드</title>
+    <title>ADK 대시보드</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
+
     <style>
         :root {
             /* 화이트 계열 반투명 글래스 */
@@ -69,7 +73,7 @@
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* --- 애니메이션 정의 (박스 페이드인, 텍스트 왼쪽 슬라이드) --- */
+        /* --- 애니메이션 정의 --- */
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fadeInLeft { from { opacity: 0; transform: translateX(-20px); filter: blur(4px); } to { opacity: 1; transform: translateX(0); filter: blur(0); } }
         
@@ -78,24 +82,22 @@
         .anim-text { opacity: 0; }
         .anim-text.active { animation: fadeInLeft 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
 
-        /* 딜레이 유틸리티 */
         .d-1 { animation-delay: 0.1s; } .d-2 { animation-delay: 0.2s; } .d-3 { animation-delay: 0.3s; }
 
         /* --- 타임라인 CSS --- */
-        /* 스케줄 탭 내부 스크롤을 위한 래퍼 */
         .timeline-scroll-wrapper {
-            position: relative; height: calc(100vh - 220px); overflow-y: auto; padding-right: 5px;
+            position: relative; height: calc(100vh - 220px); overflow-y: auto; padding-right: 5px; scroll-behavior: smooth;
         }
-        .timeline-container { position: relative; padding-left: 50px; margin-top: 10px; height: 1440px; /* 24시간 * 60px */ }
+        .timeline-container { position: relative; padding-left: 50px; margin-top: 10px; height: 1440px; }
         .time-slot { height: 60px; border-top: 1px solid rgba(255,255,255,0.1); position: relative; box-sizing: border-box; }
         .time-label { position: absolute; left: -50px; top: -10px; font-size: 0.75rem; color: rgba(255,255,255,0.6); width: 40px; text-align: right; }
         .timeline-event {
             position: absolute; left: 10px; right: 10px; padding: 8px 12px;
             border-radius: 12px; font-size: 0.85rem;
             background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3);
-            cursor: pointer; transition: transform 0.2s;
+            cursor: pointer; transition: transform 0.2s; z-index: 5;
         }
-        .timeline-event:hover { transform: scale(1.02); }
+        .timeline-event:hover { transform: scale(1.02); z-index: 20; }
         
         /* 현재 시간 레드 라인 */
         #current-time-line {
@@ -108,18 +110,36 @@
             background-color: #ef4444; border-radius: 50%; box-shadow: 0 0 5px rgba(239, 68, 68, 0.8);
         }
 
-        /* --- 캘린더 CSS (자석 효과 추가) --- */
+        /* --- 캘린더 CSS --- */
         #calendar-scroll-area {
             scroll-snap-type: y mandatory;
             scroll-behavior: smooth;
         }
         .cal-month-section { scroll-snap-align: center; margin-bottom: 2rem; min-height: 300px; padding-top: 10px; }
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
-        .cal-day { padding: 10px 0; font-size: 0.875rem; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.2s;}
+        .cal-day { padding: 8px 0; font-size: 0.875rem; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; transition: all 0.2s; min-height: 60px; position: relative; }
         .cal-day:not(.other-month) { cursor: pointer; }
         .cal-day:not(.other-month):hover { background: rgba(255,255,255,0.1); }
         .cal-day.today { background: rgba(255,255,255,0.2); font-weight: bold; border: 1px solid rgba(255,255,255,0.4); }
-        .cal-day.other-month { opacity: 0.3; }
+        .cal-day.other-month { opacity: 0.3; pointer-events: none; }
+        
+        .cal-event-container { width: 100%; margin-top: 4px; display: flex; flex-direction: column; gap: 2px; position: absolute; top: 25px; left: 0; }
+        
+        /* 캘린더 Pill 이벤트 스타일 */
+        .cal-pill {
+            background: rgba(59, 130, 246, 0.8);
+            color: white; font-size: 0.65rem; padding: 2px 4px; 
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            cursor: pointer; position: relative; height: 18px; line-height: 14px; text-align: left;
+            z-index: 5;
+        }
+        .cal-pill.neis {
+            background: rgba(16, 185, 129, 0.8); /* 학사일정은 초록색으로 구분 */
+        }
+        .cal-pill.single { border-radius: 9999px; width: 90%; margin: 0 auto; }
+        .cal-pill.start { border-radius: 9999px 0 0 9999px; width: 100%; margin-left: 5%; padding-left: 8px; }
+        .cal-pill.mid { border-radius: 0; width: 100%; padding-left: 4px; border-left: 1px solid rgba(255,255,255,0.1); border-right: 1px solid rgba(255,255,255,0.1); }
+        .cal-pill.end { border-radius: 0 9999px 9999px 0; width: 95%; padding-left: 4px; border-left: 1px solid rgba(255,255,255,0.1); }
 
         /* --- 하단 네비게이션 --- */
         .bottom-nav {
@@ -141,6 +161,22 @@
 
     <div class="bezel-gradient-top"></div>
     <div class="bezel-gradient-bottom"></div>
+
+    <div id="custom-modal-overlay" class="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
+        <div class="liquid-glass card p-6 w-11/12 max-w-sm mx-auto shadow-2xl flex flex-col transform scale-95 transition-transform duration-300" id="custom-modal-box">
+            <h3 id="cm-title" class="text-xl font-bold mb-2">알림</h3>
+            <p id="cm-message" class="text-white/80 text-sm mb-4 whitespace-pre-wrap">메시지 내용</p>
+            <div id="cm-input-area" class="hidden flex-col gap-2 mb-4">
+                <input type="text" id="cm-input-1" class="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white focus:outline-none placeholder-white/50">
+                <input type="text" id="cm-input-2" class="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white focus:outline-none placeholder-white/50 hidden">
+                <input type="text" id="cm-input-3" class="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white focus:outline-none placeholder-white/50 hidden">
+            </div>
+            <div class="flex gap-2 justify-end mt-2">
+                <button id="cm-btn-cancel" class="px-4 py-2 rounded-xl text-sm font-semibold bg-white/10 hover:bg-white/20 transition hidden">취소</button>
+                <button id="cm-btn-confirm" class="px-4 py-2 rounded-xl text-sm font-semibold bg-blue-500/80 hover:bg-blue-500 transition shadow-lg text-white">확인</button>
+            </div>
+        </div>
+    </div>
 
     <div id="onboarding-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center p-6 bg-black/50 backdrop-blur-xl transition-opacity duration-500 hidden">
         <div id="welcome-text" class="text-4xl font-bold mb-12 tracking-tight drop-shadow-lg">환영합니다</div>
@@ -167,30 +203,53 @@
     </div>
 
     <div id="main-app" class="app-container hidden">
-        
         <div id="tab-home" class="tab-content flex flex-col gap-5">
             <header class="mb-2 anim-box">
                 <p class="text-white/70 text-sm font-medium anim-text" id="display-user-info">대륜고등학교</p>
                 <h1 class="text-3xl font-bold mt-1 drop-shadow-md anim-text d-1" id="greeting-text">좋은 아침입니다!</h1>
             </header>
+            
+            <section class="liquid-glass card p-4 anim-box d-1 cursor-pointer hover:bg-white/5 transition" onclick="openStudentId()">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center text-2xl border border-blue-500/30">🪪</div>
+                        <div>
+                            <h3 class="text-lg font-bold text-white">모바일 학생증</h3>
+                            <p class="text-white/60 text-xs mt-0.5">클릭하여 열기 및 인증</p>
+                        </div>
+                    </div>
+                    <div class="text-white/40">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </div>
+                </div>
+            </section>
 
-            <section class="liquid-glass card p-5 anim-box d-1">
+            <section class="liquid-glass card p-5 anim-box d-1 mt-2">
                 <div class="flex justify-between items-center mb-3">
-                    <h3 class="text-lg font-semibold anim-text d-1">현재 날씨 ☀️</h3>
-                    <span class="text-xs text-white/50" id="weather-location">만촌3동</span>
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-lg font-semibold anim-text d-1">현재 날씨 ☀️</h3>
+                        <button onclick="fetchWeather()" class="text-white/50 hover:text-white transition p-1.5 rounded-full bg-white/5 hover:bg-white/20 active:scale-95" title="새로고침">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        </button>
+                    </div>
+                    <span class="text-xs text-white/50" id="weather-location">대구</span>
                 </div>
                 <div id="weather-content" class="flex items-center gap-4 text-white/90">
                     <div class="text-sm">날씨 정보를 불러오는 중...</div>
                 </div>
             </section>
-
+            
             <section class="liquid-glass card p-5 anim-box d-2">
-                <h3 class="text-lg font-semibold mb-3 anim-text d-2">오늘의 급식 🍱</h3>
-                <div id="meal-content" class="text-sm leading-relaxed text-white/90 min-h-[60px]">
-                    급식 정보를 불러오는 중...
+                <h3 class="text-lg font-semibold mb-3 anim-text d-2">오늘의 시간표 ⏰</h3>
+                <div id="timetable-content" class="grid grid-cols-2 gap-2 text-sm text-white/90 min-h-[60px]">
+                    <div class="text-white/70 col-span-2">시간표를 불러오는 중...</div>
                 </div>
             </section>
 
+            <section class="liquid-glass card p-5 anim-box d-2">
+                <h3 class="text-lg font-semibold mb-3 anim-text d-2">오늘의 급식 🍱</h3>
+                <div id="meal-content" class="text-sm leading-relaxed text-white/90 min-h-[60px]">급식 정보를 불러오는 중...</div>
+            </section>
             <section class="liquid-glass card p-5 anim-box d-3">
                 <h3 class="text-lg font-semibold mb-3 anim-text d-3">다가오는 학사일정 📅</h3>
                 <ul id="home-schedule-list" class="text-sm space-y-2 min-h-[60px]">
@@ -209,7 +268,7 @@
                 <div class="timeline-scroll-wrapper hide-scrollbar" id="timeline-wrapper">
                     <div class="timeline-container" id="timeline-box">
                         <div id="current-time-line"></div>
-                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -221,7 +280,7 @@
             </div>
             
             <div id="calendar-scroll-area" class="liquid-glass card p-5 flex-1 overflow-y-auto hide-scrollbar relative anim-box d-1" onscroll="handleCalendarScroll()">
-                </div>
+            </div>
         </div>
 
         <div id="tab-account" class="tab-content hidden pb-10">
@@ -246,13 +305,9 @@
                         <span class="font-medium">학급 정보</span>
                         <span class="text-white/70" id="set-info-class">O학년 O반 O번</span>
                     </div>
-                </div>
-
-                <div class="liquid-glass card overflow-hidden anim-box d-3">
-                    <div class="px-5 py-3 text-xs font-bold text-white/50 bg-black/10 border-b border-white/10 uppercase tracking-wider">시스템 연동</div>
-                    <div class="px-5 py-4 flex justify-between items-center border-b border-white/10">
-                        <span class="font-medium">나이스(NEIS) 연동</span>
-                        <span class="text-green-300 text-sm font-bold bg-green-500/20 px-2 py-1 rounded-lg">활성화됨</span>
+                    <div class="px-5 py-4 flex justify-between items-center border-b border-white/10 cursor-pointer hover:bg-white/5 transition" onclick="openPeriodTimeModal()">
+                        <span class="font-medium">교시 및 급식 시간 설정</span>
+                        <span class="text-white/70">></span>
                     </div>
                 </div>
                 
@@ -286,49 +341,177 @@
     <div id="schedule-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
         <div class="w-full max-w-sm mx-4 liquid-glass card flex flex-col max-h-[80vh]">
             <div class="p-4 border-b border-white/20 flex justify-between items-center shrink-0">
-                <h3 id="modal-date-title" class="text-lg font-bold">2026년 7월 13일 일정</h3>
+                <h3 id="modal-date-title" class="text-lg font-bold">일정</h3>
                 <button onclick="closeScheduleModal()" class="text-white/60 hover:text-white text-xl">&times;</button>
             </div>
             
             <div class="p-4 overflow-y-auto flex-1 hide-scrollbar">
-                <div id="modal-schedule-list" class="space-y-2 mb-4">
-                    </div>
+                <div id="modal-schedule-list" class="space-y-2 mb-4"></div>
             </div>
 
             <div class="p-4 border-t border-white/20 bg-black/20 shrink-0 rounded-b-[24px]">
-                <h4 class="text-sm font-semibold mb-2">새 스케줄 추가</h4>
+                <h4 class="text-sm font-semibold mb-2" id="modal-add-title">새 스케줄 추가</h4>
                 <input type="text" id="modal-event-title" placeholder="내용 입력" class="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white text-sm mb-2 focus:outline-none">
-                <div class="flex gap-2 mb-2">
-                    <select id="modal-start-hour" class="flex-1 bg-white/10 border border-white/20 rounded-xl px-2 py-2 text-white text-sm focus:outline-none">
-                        </select>
-                    <span class="text-white/50 self-center">~</span>
-                    <select id="modal-end-hour" class="flex-1 bg-white/10 border border-white/20 rounded-xl px-2 py-2 text-white text-sm focus:outline-none">
-                        </select>
+                
+                <div class="flex gap-2 mb-2 items-center">
+                    <span class="text-xs text-white/70 whitespace-nowrap">종료 날짜</span>
+                    <input type="date" id="modal-end-date" class="flex-1 bg-white/10 border border-white/20 rounded-xl px-2 py-2 text-white text-sm focus:outline-none">
                 </div>
-                <button onclick="saveModalSchedule()" class="w-full bg-white/20 hover:bg-white/30 transition text-white font-bold py-2 rounded-xl text-sm">일정 추가</button>
+
+                <div class="flex gap-2 mb-2">
+                    <select id="modal-start-hour" class="flex-1 bg-white/10 border border-white/20 rounded-xl px-2 py-2 text-white text-sm focus:outline-none"></select>
+                    <span class="text-white/50 self-center">~</span>
+                    <select id="modal-end-hour" class="flex-1 bg-white/10 border border-white/20 rounded-xl px-2 py-2 text-white text-sm focus:outline-none"></select>
+                </div>
+                <input type="hidden" id="modal-editing-id" value="">
+                <button onclick="saveModalSchedule()" class="w-full bg-blue-500/80 hover:bg-blue-500 transition text-white font-bold py-2 rounded-xl text-sm shadow-lg">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="period-time-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+        <div class="w-full max-w-sm mx-4 liquid-glass card flex flex-col max-h-[80vh]">
+            <div class="p-4 border-b border-white/20 flex justify-between items-center shrink-0">
+                <h3 class="text-lg font-bold">교시 및 급식 시간 설정</h3>
+                <button onclick="closePeriodTimeModal()" class="text-white/60 hover:text-white text-xl">&times;</button>
+            </div>
+            <div class="p-4 overflow-y-auto flex-1 hide-scrollbar" id="period-time-list">
+                </div>
+            <div class="p-4 border-t border-white/20 bg-black/20 shrink-0 rounded-b-[24px]">
+                <button onclick="savePeriodTimes()" class="w-full bg-blue-500/80 hover:bg-blue-500 transition text-white font-bold py-2 rounded-xl text-sm shadow-lg">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="scanner-modal" class="fixed inset-0 z-[300] flex flex-col items-center justify-center bg-black backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
+        <h2 class="text-xl font-bold mb-4 text-white">바코드 스캔</h2>
+        <p class="text-sm text-white/70 mb-4">학생증의 바코드를 카메라에 비춰주세요.</p>
+        <div id="reader" class="w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl bg-white mb-6"></div>
+        <button onclick="closeScannerModal()" class="liquid-glass pill px-8 py-3 font-bold text-white hover:bg-white/20">취소</button>
+    </div>
+
+    <div id="id-display-modal" class="fixed inset-0 z-[300] flex items-center justify-center bg-black/80 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
+        <div class="liquid-glass card p-8 flex flex-col items-center w-11/12 max-w-sm bg-white/90">
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">모바일 학생증</h2>
+            <p class="text-gray-500 text-sm mb-6 font-medium" id="student-id-info">대륜고등학교</p>
+            
+            <div class="bg-white p-4 rounded-xl shadow-inner w-full flex justify-center mb-6">
+                <canvas id="barcode-canvas"></canvas>
+            </div>
+            
+            <div class="flex items-center gap-2 mb-6 text-gray-800">
+                <span class="font-bold">남은 시간:</span>
+                <span id="id-timer-text" class="text-red-500 font-bold text-lg">60초</span>
+            </div>
+
+            <div class="flex gap-3 w-full">
+                <button onclick="closeIdDisplay()" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-300 transition">닫기</button>
+                <button onclick="extendIdTimer()" class="flex-1 bg-blue-500 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-blue-600 transition">연장하기</button>
             </div>
         </div>
     </div>
 
     <script>
-        // API 키 및 전역 변수 설정 (방송대기화면 v3 참고)
         const OPENWEATHER_API_KEY = 'af8f2f48035d25a72c21fb5c4a576d5b';
         const NEIS_API_KEY = '9415686e1ade498d8755f0d28aa7489e';
         const DEFAULT_REGION_CODE = 'D10'; 
         const DEFAULT_SCHOOL_CODE = '7240085';
 
+        const DEFAULT_PERIOD_TIMES = {
+            1: { start: '09:00', end: '09:50' },
+            2: { start: '10:00', end: '10:50' },
+            3: { start: '11:00', end: '11:50' },
+            4: { start: '12:00', end: '12:50' },
+            'meal': { start: '12:50', end: '13:50' },
+            5: { start: '13:50', end: '14:40' },
+            6: { start: '14:50', end: '15:40' },
+            7: { start: '15:50', end: '16:40' }
+        };
+
         let userCustomSchedules = JSON.parse(localStorage.getItem('userCustomSchedules') || '[]');
+        let neisSchedulesData = JSON.parse(localStorage.getItem('neisSchedules') || '[]');
+        let dailyTimetableSchedules = [];
         let selectedModalDate = new Date();
 
-        // --- 1. 초기화 및 온보딩 ---
+        function getPeriodTimes() {
+            return JSON.parse(localStorage.getItem('periodTimes')) || DEFAULT_PERIOD_TIMES;
+        }
+
+        /* --- 커스텀 모달 관리 로직 --- */
+        function showCustomModal({ title, message, inputs = [], showCancel = false, onConfirm }) {
+            const overlay = document.getElementById('custom-modal-overlay');
+            const box = document.getElementById('custom-modal-box');
+            
+            document.getElementById('cm-title').innerText = title || '알림';
+            document.getElementById('cm-message').innerText = message || '';
+            
+            const inputArea = document.getElementById('cm-input-area');
+            const in1 = document.getElementById('cm-input-1');
+            const in2 = document.getElementById('cm-input-2');
+            const in3 = document.getElementById('cm-input-3');
+            
+            in1.classList.add('hidden'); in2.classList.add('hidden'); in3.classList.add('hidden');
+            in1.value = ''; in2.value = ''; in3.value = '';
+            
+            if(inputs.length > 0) {
+                inputArea.classList.remove('hidden');
+                inputArea.classList.add('flex');
+                if(inputs[0]) { 
+                    in1.type = inputs[0].type || 'text'; 
+                    in1.placeholder = inputs[0].placeholder; in1.value = inputs[0].value || ''; in1.classList.remove('hidden'); 
+                }
+                if(inputs[1]) { in2.placeholder = inputs[1].placeholder; in2.value = inputs[1].value || ''; in2.classList.remove('hidden'); }
+                if(inputs[2]) { in3.placeholder = inputs[2].placeholder; in3.value = inputs[2].value || ''; in3.classList.remove('hidden'); }
+            } else {
+                inputArea.classList.add('hidden');
+                inputArea.classList.remove('flex');
+            }
+
+            const btnCancel = document.getElementById('cm-btn-cancel');
+            const btnConfirm = document.getElementById('cm-btn-confirm');
+            
+            if(showCancel) btnCancel.classList.remove('hidden');
+            else btnCancel.classList.add('hidden');
+
+            const newConfirm = btnConfirm.cloneNode(true);
+            btnConfirm.parentNode.replaceChild(newConfirm, btnConfirm);
+            const newCancel = btnCancel.cloneNode(true);
+            btnCancel.parentNode.replaceChild(newCancel, btnCancel);
+
+            const close = () => {
+                overlay.classList.add('opacity-0');
+                box.classList.remove('scale-100'); box.classList.add('scale-95');
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    in1.type = 'text'; 
+                }, 300);
+            };
+
+            newCancel.addEventListener('click', close);
+            newConfirm.addEventListener('click', () => {
+                if(onConfirm) {
+                    let vals = [];
+                    if(inputs[0]) vals.push(document.getElementById('cm-input-1').value);
+                    if(inputs[1]) vals.push(document.getElementById('cm-input-2').value);
+                    if(inputs[2]) vals.push(document.getElementById('cm-input-3').value);
+                    if(onConfirm(vals) === false) return;
+                }
+                close();
+            });
+
+            overlay.classList.remove('hidden');
+            setTimeout(() => {
+                overlay.classList.remove('opacity-0');
+                box.classList.remove('scale-95'); box.classList.add('scale-100');
+            }, 10);
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
-            // 학급 번호 초기화
             const classSelect = document.getElementById('input-class');
             for(let i=1; i<=12; i++) classSelect.innerHTML += `<option value="${i}" class="text-black">${i}반</option>`;
             const numSelect = document.getElementById('input-number');
             for(let i=1; i<=30; i++) numSelect.innerHTML += `<option value="${i}" class="text-black">${i}번</option>`;
 
-            // 모달 시간 초기화
             const startH = document.getElementById('modal-start-hour');
             const endH = document.getElementById('modal-end-hour');
             for(let i=0; i<=23; i++) startH.innerHTML += `<option value="${i}" class="text-black">${i}:00</option>`;
@@ -338,7 +521,6 @@
             initCalendar();
             checkUserConfig();
             
-            // 현재 시간 타이머 시작
             setInterval(updateTimelineRedLine, 60000);
             updateTimelineRedLine();
 
@@ -346,7 +528,27 @@
                 const activeItem = document.querySelector('.nav-item.active');
                 if(activeItem) updateNavIndicator(activeItem);
             });
+
+            setupTimelineMagnetScroll();
         });
+
+        // --- 정각 새로고침 설정 ---
+        function setupHourlyRefresh() {
+            const now = new Date();
+            const msUntilNextHour = (60 - now.getMinutes()) * 60000 - (now.getSeconds() * 1000) - now.getMilliseconds();
+            
+            setTimeout(() => {
+                refreshAPIInfo();
+                // 이후 1시간마다 반복
+                setInterval(refreshAPIInfo, 3600000);
+            }, msUntilNextHour);
+        }
+
+        function refreshAPIInfo() {
+            fetchMeal();
+            fetchNeisSchedules();
+            fetchNeisTimetable();
+        }
 
         function checkUserConfig() {
             const config = localStorage.getItem('userConfig');
@@ -356,14 +558,12 @@
                 showMainApp();
                 setTimeout(() => {
                     updateNavIndicator(document.querySelector('.nav-item.active'));
-                    triggerAnimations('home'); // 초기 진입 애니메이션 트리거
+                    triggerAnimations('home'); 
                 }, 100);
-                
-                // API 데이터 로드
-                fetchWeather();
-                fetchMeal();
-                fetchNeisSchedules();
-                renderTimelineSchedules(new Date()); // 오늘 날짜 렌더링
+                fetchWeather(); 
+                refreshAPIInfo();
+                setupHourlyRefresh();
+                renderTimelineSchedules(new Date()); 
             } else {
                 showOnboarding();
             }
@@ -384,7 +584,10 @@
             const cls = document.getElementById('input-class').value;
             const num = document.getElementById('input-number').value;
 
-            if(!name || !grade || !cls || !num) { alert("모든 정보를 입력해주세요."); return; }
+            if(!name || !grade || !cls || !num) {
+                showCustomModal({ message: "모든 정보를 입력해주세요." });
+                return;
+            }
 
             const userData = { name, school: '대륜고등학교', grade, class: cls, number: num };
             localStorage.setItem('userConfig', JSON.stringify(userData));
@@ -393,9 +596,9 @@
             applyUserData(userData);
             showMainApp();
             
-            fetchWeather();
-            fetchMeal();
-            fetchNeisSchedules();
+            fetchWeather(); 
+            refreshAPIInfo();
+            setupHourlyRefresh();
             renderTimelineSchedules(new Date());
 
             setTimeout(() => {
@@ -412,6 +615,8 @@
             document.getElementById('profile-school').textContent = `${data.school} ${data.grade}학년 ${data.class}반`;
             document.getElementById('set-info-name').textContent = data.name;
             document.getElementById('set-info-class').textContent = `${data.grade}학년 ${data.class}반 ${data.number}번`;
+            
+            document.getElementById('student-id-info').textContent = `${data.school} ${data.grade}학년 ${data.class}반 ${data.number}번 ${data.name}`;
         }
 
         function showMainApp() {
@@ -419,31 +624,51 @@
             document.getElementById('bottom-navigation').classList.remove('hidden');
         }
 
-        // --- 2. 탭 전환 및 애니메이션 ---
+        /* --- 탭 기능 및 타임라인 정렬 --- */
         function switchTab(tabId, element) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            const targetTab = document.getElementById('tab-' + tabId);
-            targetTab.classList.remove('hidden');
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
             
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             element.classList.add('active');
             updateNavIndicator(element);
             
-            // 탭 내부 스크롤 최상단 리셋
             if(tabId === 'timetable') {
-                const wrapper = document.getElementById('timeline-wrapper');
-                // 현재 시간 근처로 스크롤
-                const currentHour = new Date().getHours();
-                wrapper.scrollTop = Math.max(0, (currentHour * 60) - 100);
-                renderTimelineSchedules(new Date()); // 항상 오늘 스케줄 렌더링
+                centerTimelineOnRedLine();
+                renderTimelineSchedules(new Date());
             } else if(tabId === 'calendar') {
                 scrollToCurrentMonth();
-                renderCalendarSchedules(); // 캘린더 점 찍기 갱신
+                renderCalendarSchedules();
             } else {
                 document.getElementById('main-app').scrollTo({ top: 0, behavior: 'auto' });
             }
-
             triggerAnimations(tabId);
+        }
+
+        function centerTimelineOnRedLine() {
+            const wrapper = document.getElementById('timeline-wrapper');
+            const now = new Date();
+            const topPos = (now.getHours() * 60) + now.getMinutes();
+            const centerPos = Math.max(0, topPos - (wrapper.clientHeight / 2));
+            wrapper.scrollTo({ top: centerPos, behavior: 'smooth' });
+        }
+
+        function setupTimelineMagnetScroll() {
+            const wrapper = document.getElementById('timeline-wrapper');
+            let isScrolling;
+            
+            wrapper.addEventListener('scroll', function (event) {
+                window.clearTimeout(isScrolling);
+                isScrolling = setTimeout(function() {
+                    const now = new Date();
+                    const topPos = (now.getHours() * 60) + now.getMinutes();
+                    const centerPos = topPos - (wrapper.clientHeight / 2);
+                    
+                    if (Math.abs(wrapper.scrollTop - centerPos) < 100) {
+                        wrapper.scrollTo({ top: centerPos, behavior: 'smooth' });
+                    }
+                }, 150);
+            });
         }
 
         function updateNavIndicator(element) {
@@ -454,138 +679,424 @@
             }
         }
 
-        // 클래스 토글을 통한 애니메이션 재시작
         function triggerAnimations(tabId) {
             const tab = document.getElementById('tab-' + tabId);
-            const animElements = tab.querySelectorAll('.anim-box, .anim-text');
-            animElements.forEach(el => {
+            tab.querySelectorAll('.anim-box, .anim-text').forEach(el => {
                 el.classList.remove('active');
-                void el.offsetWidth; // 리플로우 강제 트리거
+                void el.offsetWidth;
                 el.classList.add('active');
             });
         }
 
-        // --- 3. 설정 변경 (팝업 프롬프트 사용) ---
         function editSetting(type) {
             const userData = JSON.parse(localStorage.getItem('userConfig'));
             if(type === 'name') {
-                const newName = prompt("새로운 이름을 입력하세요:", userData.name);
-                if(newName && newName.trim() !== '') userData.name = newName.trim();
+                showCustomModal({
+                    title: "이름 수정",
+                    message: "새로운 이름을 입력하세요:",
+                    inputs: [{ placeholder: "이름", value: userData.name }],
+                    showCancel: true,
+                    onConfirm: (vals) => {
+                        const newName = vals[0].trim();
+                        if(newName) { userData.name = newName; localStorage.setItem('userConfig', JSON.stringify(userData)); applyUserData(userData); }
+                    }
+                });
             } else if (type === 'class') {
-                const g = prompt("학년을 입력하세요 (1~3):", userData.grade);
-                const c = prompt("반을 입력하세요 (1~12):", userData.class);
-                const n = prompt("번호를 입력하세요 (1~30):", userData.number);
-                if(g && c && n) { userData.grade = g; userData.class = c; userData.number = n; }
+                showCustomModal({
+                    title: "학급 정보 수정",
+                    message: "학년, 반, 번호를 차례대로 입력하세요:",
+                    inputs: [
+                        { placeholder: "학년 (예: 1)", value: userData.grade },
+                        { placeholder: "반 (예: 3)", value: userData.class },
+                        { placeholder: "번호 (예: 15)", value: userData.number }
+                    ],
+                    showCancel: true,
+                    onConfirm: (vals) => {
+                        if(vals[0] && vals[1] && vals[2]) {
+                            userData.grade = vals[0]; userData.class = vals[1]; userData.number = vals[2];
+                            localStorage.setItem('userConfig', JSON.stringify(userData)); applyUserData(userData);
+                            fetchNeisTimetable();
+                        }
+                    }
+                });
             }
-            localStorage.setItem('userConfig', JSON.stringify(userData));
-            applyUserData(userData);
+        }
+
+        function openPeriodTimeModal() {
+            const times = getPeriodTimes();
+            const list = document.getElementById('period-time-list');
+            let html = '';
+            
+            const labels = {
+                1: '1교시', 2: '2교시', 3: '3교시', 4: '4교시',
+                'meal': '급식시간', 5: '5교시', 6: '6교시', 7: '7교시'
+            };
+
+            for (const key of [1, 2, 3, 4, 'meal', 5, 6, 7]) {
+                const t = times[key];
+                html += `
+                    <div class="mb-3 flex justify-between items-center bg-white/5 p-2 rounded-xl">
+                        <span class="text-sm font-semibold">${labels[key]}</span>
+                        <div class="flex items-center gap-1">
+                            <input type="time" id="pt-start-${key}" value="${t.start}" class="bg-white/10 border border-white/20 rounded px-1 py-1 text-xs text-white focus:outline-none">
+                            <span class="text-white/50">~</span>
+                            <input type="time" id="pt-end-${key}" value="${t.end}" class="bg-white/10 border border-white/20 rounded px-1 py-1 text-xs text-white focus:outline-none">
+                        </div>
+                    </div>
+                `;
+            }
+            list.innerHTML = html;
+            
+            const modal = document.getElementById('period-time-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        }
+
+        function closePeriodTimeModal() {
+            const modal = document.getElementById('period-time-modal');
+            modal.classList.add('opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        function savePeriodTimes() {
+            const newTimes = {};
+            for (const key of [1, 2, 3, 4, 'meal', 5, 6, 7]) {
+                newTimes[key] = {
+                    start: document.getElementById(`pt-start-${key}`).value,
+                    end: document.getElementById(`pt-end-${key}`).value
+                };
+            }
+            localStorage.setItem('periodTimes', JSON.stringify(newTimes));
+            closePeriodTimeModal();
+            fetchNeisTimetable();
+            showCustomModal({message: "설정이 성공적으로 저장되었습니다.", title: "알림"});
         }
 
         function resetData() {
-            if(confirm('모든 설정을 초기화 하시겠습니까? (커스텀 일정도 삭제됩니다)')) {
-                localStorage.clear();
-                location.reload();
+            showCustomModal({
+                title: "설정 초기화",
+                message: "모든 설정을 초기화 하시겠습니까? (커스텀 일정 및 바코드 정보도 삭제됩니다)",
+                showCancel: true,
+                onConfirm: () => { localStorage.clear(); location.reload(); }
+            });
+        }
+
+        // --- 모바일 학생증 기능 ---
+        let html5QrcodeScanner = null;
+        let idDisplayTimer = null;
+        let idTimeRemaining = 60;
+
+        function openStudentId() {
+            const pin = localStorage.getItem('studentIdPin');
+            if(!pin) {
+                showCustomModal({
+                    title: "비밀번호 설정", 
+                    message: "모바일 학생증 접속을 위한 4자리 비밀번호를 설정해주세요.",
+                    inputs: [{ placeholder: "4자리 숫자 입력", type: "password" }], 
+                    showCancel: true,
+                    onConfirm: (v) => {
+                        const val = v[0].trim();
+                        if(val && val.length === 4 && !isNaN(val)) {
+                            localStorage.setItem('studentIdPin', val);
+                            openStudentId(); 
+                        } else {
+                            alert('4자리 숫자를 정확히 입력해주세요.'); 
+                            return false;
+                        }
+                    }
+                });
+            } else {
+                showCustomModal({
+                    title: "보안 인증", 
+                    message: "설정하신 비밀번호 4자리를 입력해주세요.",
+                    inputs: [{ placeholder: "비밀번호 입력", type: "password" }], 
+                    showCancel: true,
+                    onConfirm: (v) => {
+                        if(v[0] === pin) {
+                            checkAndShowBarcode();
+                        } else {
+                            alert('비밀번호가 일치하지 않습니다.'); 
+                            return false;
+                        }
+                    }
+                });
             }
         }
 
-        // --- 4. 홈화면 API 연동 ---
+        function checkAndShowBarcode() {
+            const savedBarcodeData = localStorage.getItem('studentIdBarcode');
+            if(savedBarcodeData) {
+                showIdDisplayModal(savedBarcodeData);
+            } else {
+                showScannerModal();
+            }
+        }
+
+        function showScannerModal() {
+            const modal = document.getElementById('scanner-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+
+            html5QrcodeScanner = new Html5Qrcode("reader");
+            html5QrcodeScanner.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 100 } },
+                (decodedText, decodedResult) => {
+                    localStorage.setItem('studentIdBarcode', decodedText);
+                    closeScannerModal();
+                    showIdDisplayModal(decodedText);
+                },
+                (errorMessage) => { }
+            ).catch(err => {
+                alert('카메라 권한을 허용해주세요.');
+                closeScannerModal();
+            });
+        }
+
+        function closeScannerModal() {
+            if(html5QrcodeScanner) {
+                html5QrcodeScanner.stop().catch(e => console.log(e));
+            }
+            const modal = document.getElementById('scanner-modal');
+            modal.classList.add('opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        function showIdDisplayModal(data) {
+            const modal = document.getElementById('id-display-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+
+            JsBarcode("#barcode-canvas", data, {
+                format: "CODE128",
+                lineColor: "#000",
+                width: 2,
+                height: 80,
+                displayValue: true
+            });
+
+            startIdTimer();
+        }
+
+        function startIdTimer() {
+            clearInterval(idDisplayTimer);
+            idTimeRemaining = 60;
+            document.getElementById('id-timer-text').innerText = idTimeRemaining + "초";
+            
+            idDisplayTimer = setInterval(() => {
+                idTimeRemaining--;
+                document.getElementById('id-timer-text').innerText = idTimeRemaining + "초";
+                if(idTimeRemaining <= 0) {
+                    closeIdDisplay();
+                }
+            }, 1000);
+        }
+
+        function extendIdTimer() {
+            idTimeRemaining = 60;
+            document.getElementById('id-timer-text').innerText = idTimeRemaining + "초";
+        }
+
+        function closeIdDisplay() {
+            clearInterval(idDisplayTimer);
+            const modal = document.getElementById('id-display-modal');
+            modal.classList.add('opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        // --- 외부 API 연동 기능 ---
+        
         async function fetchWeather() {
-            const content = document.getElementById('weather-content');
             try {
-                const q = encodeURIComponent('만촌3동,대구,KR');
-                const geoRes = await fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${q}&limit=1&appid=${OPENWEATHER_API_KEY}`);
-                const geoJson = await geoRes.json();
-                const { lat, lon } = geoJson[0];
-                const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&lang=kr&appid=${OPENWEATHER_API_KEY}`);
+                // OpenWeatherMap API 호출 (대구 지역 기준)
+                const url = `https://api.openweathermap.org/data/2.5/weather?q=Daegu&appid=${OPENWEATHER_API_KEY}&units=metric&lang=kr`;
+                const res = await fetch(url);
                 const data = await res.json();
                 
-                const temp = Math.round(data.main.temp);
-                const desc = data.weather[0].description;
-                const icon = data.weather[0].icon;
-                
-                content.innerHTML = `
-                    <img src="https://openweathermap.org/img/wn/${icon}@2x.png" class="w-12 h-12">
-                    <div>
-                        <div class="text-2xl font-bold text-yellow-300">${temp}°C</div>
-                        <div class="text-sm">${desc}</div>
-                    </div>
-                `;
+                if (data.cod === 200) {
+                    const temp = Math.round(data.main.temp);
+                    const desc = data.weather[0].description;
+                    const icon = data.weather[0].icon;
+                    document.getElementById('weather-content').innerHTML = `
+                        <img src="https://openweathermap.org/img/wn/${icon}.png" alt="weather" class="w-10 h-10">
+                        <div>
+                            <div class="text-2xl font-bold">${temp}°C</div>
+                            <div class="text-sm text-white/70">${desc}</div>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('weather-content').innerHTML = '<div class="text-sm text-white/50">날씨 정보를 가져올 수 없습니다.</div>';
+                }
             } catch(e) {
-                content.innerHTML = '<span class="text-sm">날씨 정보를 불러오지 못했습니다.</span>';
+                console.error(e);
+                document.getElementById('weather-content').innerHTML = '<div class="text-sm text-white/50">날씨 정보를 불러오지 못했습니다.</div>';
             }
         }
 
         async function fetchMeal() {
-            const content = document.getElementById('meal-content');
-            const now = new Date();
-            const dateStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
-            
             try {
-                const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&pIndex=1&pSize=1&ATPT_OFCDC_SC_CODE=${DEFAULT_REGION_CODE}&SD_SCHUL_CODE=${DEFAULT_SCHOOL_CODE}&MLSV_YMD=${dateStr}&KEY=${NEIS_API_KEY}`;
+                const today = new Date();
+                const ymd = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+                
+                const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${DEFAULT_REGION_CODE}&SD_SCHUL_CODE=${DEFAULT_SCHOOL_CODE}&MLSV_YMD=${ymd}`;
+                
                 const res = await fetch(url);
                 const data = await res.json();
                 
-                if (data.mealServiceDietInfo && data.mealServiceDietInfo[1].row) {
-                    let mealText = data.mealServiceDietInfo[1].row[0].DDISH_NM;
-                    const menuItems = mealText.split('<br/>').map(i => i.trim()).join(', ');
-                    // 알레르기 번호 제거 정규식
-                    content.innerHTML = menuItems.replace(/[0-9.]/g, '').trim();
+                if (data.mealServiceDietInfo && data.mealServiceDietInfo[1] && data.mealServiceDietInfo[1].row) {
+                    const mealStr = data.mealServiceDietInfo[1].row[0].DDISH_NM;
+                    // 알레르기 정보 숫자 등 불필요한 텍스트를 제거하고 포맷팅
+                    const cleanMeal = mealStr.replace(/<br\/>/g, ', ').replace(/\([^)]*\)/g, '');
+                    document.getElementById('meal-content').innerHTML = cleanMeal;
                 } else {
-                    content.innerHTML = '오늘은 급식이 없습니다.';
+                    document.getElementById('meal-content').innerHTML = '<div class="text-white/50">오늘의 급식 정보가 없습니다.</div>';
                 }
             } catch(e) {
-                content.innerHTML = '급식 정보를 불러오지 못했습니다.';
+                console.error(e);
+                document.getElementById('meal-content').innerHTML = '<div class="text-white/50">급식 정보를 불러오지 못했습니다.</div>';
             }
         }
 
         async function fetchNeisSchedules() {
-            const list = document.getElementById('home-schedule-list');
-            const now = new Date();
-            const fromYMD = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}01`;
-            const toYMD = `${now.getFullYear()}1231`;
-            
             try {
-                const url = `https://open.neis.go.kr/hub/SchoolSchedule?Type=json&pIndex=1&pSize=50&ATPT_OFCDC_SC_CODE=${DEFAULT_REGION_CODE}&SD_SCHUL_CODE=${DEFAULT_SCHOOL_CODE}&AA_FROM_YMD=${fromYMD}&AA_TO_YMD=${toYMD}&KEY=${NEIS_API_KEY}`;
+                const today = new Date();
+                const fromYmd = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+                
+                // 향후 30일간의 일정 조회
+                const toDate = new Date(today);
+                toDate.setDate(toDate.getDate() + 30);
+                const toYmd = `${toDate.getFullYear()}${String(toDate.getMonth() + 1).padStart(2, '0')}${String(toDate.getDate()).padStart(2, '0')}`;
+
+                const url = `https://open.neis.go.kr/hub/SchoolSchedule?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${DEFAULT_REGION_CODE}&SD_SCHUL_CODE=${DEFAULT_SCHOOL_CODE}&AA_FROM_YMD=${fromYmd}&AA_TO_YMD=${toYmd}`;
+                
                 const res = await fetch(url);
                 const data = await res.json();
+                const list = document.getElementById('home-schedule-list');
                 
-                let schedules = [];
-                if (data.SchoolSchedule && data.SchoolSchedule[1].row) {
-                    schedules = data.SchoolSchedule[1].row
-                        .filter(r => r.EVENT_NM !== '토요휴업일')
-                        .map(r => ({ date: r.AA_YMD, name: r.EVENT_NM }));
-                }
-                
-                // 오늘 이후 3개만 추출
-                const todayNum = parseInt(`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`);
-                const upcoming = schedules.filter(s => parseInt(s.date) >= todayNum).slice(0, 3);
-                
-                if(upcoming.length > 0) {
-                    list.innerHTML = upcoming.map(s => {
-                        const m = s.date.substring(4,6);
-                        const d = s.date.substring(6,8);
-                        return `<li class="flex justify-between border-b border-white/10 pb-2">
-                            <span>${s.name}</span> <span class="text-white/80">${parseInt(m)}. ${parseInt(d)}</span>
-                        </li>`;
-                    }).join('');
+                if (data.SchoolSchedule && data.SchoolSchedule[1] && data.SchoolSchedule[1].row) {
+                    const rows = data.SchoolSchedule[1].row;
+                    let html = '';
+                    let count = 0;
+                    let fetchedNeisSchedules = [];
+                    
+                    rows.forEach(r => {
+                        if (r.EVENT_NM && r.EVENT_NM !== '토요휴업일') {
+                            // 홈 화면 일정 목록 생성 (최대 4개)
+                            if (count < 4) {
+                                const m = r.AA_YMD.substring(4, 6);
+                                const d = r.AA_YMD.substring(6, 8);
+                                html += `
+                                    <li class="flex justify-between border-b border-white/10 pb-1">
+                                        <span>${r.EVENT_NM}</span>
+                                        <span class="text-white/50 text-xs">${parseInt(m)}/${parseInt(d)}</span>
+                                    </li>`;
+                                count++;
+                            }
+
+                            // 캘린더용 데이터 저장
+                            const fDate = `${r.AA_YMD.substring(0,4)}-${r.AA_YMD.substring(4,6)}-${r.AA_YMD.substring(6,8)}`;
+                            fetchedNeisSchedules.push({
+                                id: 'neis_' + r.AA_YMD + '_' + r.EVENT_NM,
+                                date: fDate,
+                                endDate: fDate,
+                                title: r.EVENT_NM,
+                                isNeis: true
+                            });
+                        }
+                    });
+                    list.innerHTML = html || '<li class="text-white/50">다가오는 특별한 일정이 없습니다.</li>';
+                    
+                    // API 데이터를 JSON으로 LocalStorage에 저장
+                    neisSchedulesData = fetchedNeisSchedules;
+                    localStorage.setItem('neisSchedules', JSON.stringify(neisSchedulesData));
+
+                    // 캘린더 탭이 활성화 되어 있다면 즉시 리렌더링
+                    renderCalendarSchedules();
                 } else {
-                    list.innerHTML = '<li class="text-white/70">예정된 일정이 없습니다.</li>';
+                    list.innerHTML = '<li class="text-white/50">등록된 학사일정이 없습니다.</li>';
                 }
             } catch(e) {
-                list.innerHTML = '<li class="text-white/70">일정을 불러오지 못했습니다.</li>';
+                console.error(e);
+                document.getElementById('home-schedule-list').innerHTML = '<li class="text-white/50">일정을 불러오지 못했습니다.</li>';
             }
         }
 
-        // --- 5. 타임라인 (스케줄 탭) ---
+        async function fetchNeisTimetable() {
+            const config = JSON.parse(localStorage.getItem('userConfig'));
+            if (!config) return;
+            
+            const today = new Date();
+            const ymd = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+            
+            const url = `https://open.neis.go.kr/hub/hisTimetable?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${DEFAULT_REGION_CODE}&SD_SCHUL_CODE=${DEFAULT_SCHOOL_CODE}&ALL_TI_YMD=${ymd}&GRADE=${config.grade}&CLASS_NM=${config.class}`;
+            
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                const container = document.getElementById('timetable-content');
+                dailyTimetableSchedules = []; 
+                
+                const times = getPeriodTimes();
+
+                if (data.hisTimetable && data.hisTimetable[1] && data.hisTimetable[1].row) {
+                    const rows = data.hisTimetable[1].row;
+                    let html = '';
+                    
+                    rows.forEach(r => {
+                        const perio = parseInt(r.PERIO);
+                        html += `
+                            <div class="bg-white/10 p-3 rounded-xl border border-white/10 flex flex-col items-center justify-center">
+                                <span class="text-white/60 text-xs mb-1">${perio}교시</span>
+                                <span class="font-bold text-base text-center line-clamp-1">${r.ITRT_CNTNT}</span>
+                            </div>
+                        `;
+
+                        // 커스텀 시간에 맞추어 타임라인 스케줄 추가
+                        const timeCfg = times[perio];
+                        if (timeCfg) {
+                            const [sh, sm] = timeCfg.start.split(':').map(Number);
+                            const [eh, em] = timeCfg.end.split(':').map(Number);
+                            dailyTimetableSchedules.push({
+                                id: 'time_' + perio,
+                                title: `[${perio}교시] ${r.ITRT_CNTNT}`,
+                                sh, sm, eh, em,
+                                color: 'bg-indigo-500/30 border-indigo-500/50'
+                            });
+                        }
+                    });
+
+                    // 급식시간 타임라인 추가
+                    const mealCfg = times['meal'];
+                    if (mealCfg) {
+                        const [msh, msm] = mealCfg.start.split(':').map(Number);
+                        const [meh, mem] = mealCfg.end.split(':').map(Number);
+                        dailyTimetableSchedules.push({
+                            id: 'time_meal',
+                            title: `🍱 중식시간`,
+                            sh: msh, sm: msm, eh: meh, em: mem,
+                            color: 'bg-green-500/30 border-green-500/50'
+                        });
+                    }
+
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<div class="col-span-2 text-white/50 text-center py-2">오늘 등록된 시간표가 없습니다.</div>';
+                }
+                
+                renderTimelineSchedules(new Date());
+
+            } catch (e) {
+                console.error(e);
+                document.getElementById('timetable-content').innerHTML = '<div class="col-span-2 text-white/50 py-2">시간표를 불러오지 못했습니다.</div>';
+            }
+        }
+
+        // --- 타임라인 렌더링 ---
         function buildTimeline() {
             const container = document.getElementById('timeline-box');
-            let html = '<div id="current-time-line"></div>'; // 레드 라인
+            let html = '<div id="current-time-line"></div>'; 
             for(let i=0; i<=24; i++) {
-                const timeStr = i.toString().padStart(2, '0') + ':00';
-                html += `
-                <div class="time-slot" data-hour="${i}">
-                    <div class="time-label">${timeStr}</div>
-                </div>`;
+                html += `<div class="time-slot" data-hour="${i}"><div class="time-label">${i.toString().padStart(2, '0')}:00</div></div>`;
             }
             container.innerHTML = html;
         }
@@ -599,202 +1110,188 @@
         }
 
         function renderTimelineSchedules(date) {
-            // 기존 이벤트 초기화
             document.querySelectorAll('.timeline-event').forEach(el => el.remove());
+            const dateStr = formatDate(date);
+            const todayStr = formatDate(new Date());
             
-            const dateStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
-            const daySchedules = userCustomSchedules.filter(s => s.date === dateStr);
+            // 1. 유저 커스텀 일정
+            const daySchedules = userCustomSchedules.filter(s => {
+                return dateStr >= s.date && dateStr <= (s.endDate || s.date);
+            });
             
-            const colors = ['bg-pink-500/30 border-pink-500/50', 'bg-blue-500/30 border-blue-500/50', 'bg-green-500/30 border-green-500/50', 'bg-yellow-500/30 border-yellow-500/50', 'bg-purple-500/30 border-purple-500/50'];
+            const colors = ['bg-pink-500/30 border-pink-500/50', 'bg-blue-500/30 border-blue-500/50', 'bg-yellow-500/30 border-yellow-500/50', 'bg-purple-500/30 border-purple-500/50'];
             
             daySchedules.forEach((s, idx) => {
                 const color = colors[idx % colors.length];
-                addEventToTimeline(parseInt(s.start), parseInt(s.end), s.title, color, s.id);
+                let startH = parseInt(s.start);
+                let endH = parseInt(s.end);
+                let startM = 0; let endM = 0;
+                
+                if(s.date !== s.endDate) {
+                    if(dateStr > s.date) { startH = 0; startM = 0; }
+                    if(dateStr < s.endDate) { endH = 24; endM = 0; }
+                }
+                addEventToTimeline(startH, startM, endH, endM, s.title, color, s.id, true);
             });
+
+            // 2. 나이스 시간표 데이터 (오늘인 경우만)
+            if (dateStr === todayStr && dailyTimetableSchedules.length > 0) {
+                dailyTimetableSchedules.forEach(s => {
+                    addEventToTimeline(s.sh, s.sm, s.eh, s.em, s.title, s.color, s.id, false);
+                });
+            }
         }
 
-        function addEventToTimeline(startHour, endHour, title, colorClass, id) {
-            const slot = document.querySelector(`.time-slot[data-hour="${startHour}"]`);
+        // 분 단위 정밀 렌더링을 지원하는 함수
+        function addEventToTimeline(startH, startM, endH, endM, title, colorClass, id, isCustom) {
+            const slot = document.querySelector(`.time-slot[data-hour="${startH}"]`);
             if(!slot) return;
             
-            const duration = endHour - startHour;
-            const height = (duration * 60) - 2; // 선 두께 고려
+            const totalMinutes = (endH * 60 + endM) - (startH * 60 + startM);
+            const height = Math.max(10, totalMinutes - 2); 
             
             const eventEl = document.createElement('div');
-            eventEl.className = `timeline-event ${colorClass} text-white font-medium shadow-md`;
+            eventEl.className = `timeline-event ${colorClass} text-white font-medium shadow-md flex items-center`;
             eventEl.style.height = `${height}px`;
-            eventEl.style.top = '1px';
-            eventEl.innerHTML = `<span class="drop-shadow-sm line-clamp-2">${title}</span>`;
+            eventEl.style.top = `${startM + 1}px`;
+            eventEl.innerHTML = `<span class="drop-shadow-sm line-clamp-2 text-xs w-full">${title}</span>`;
             
-            eventEl.onclick = () => {
-                openScheduleModal(selectedModalDate);
-            };
+            if (isCustom) {
+                eventEl.onclick = () => { openScheduleModal(selectedModalDate, id); };
+            }
             slot.appendChild(eventEl);
         }
 
-
-        // --- 6. 캘린더 기능 (±1년 생성, 자석스크롤, 클릭 팝업) ---
-        let calMonthsData = []; // [{year, month, htmlId}]
-
+        // --- 캘린더 기능 ---
         function initCalendar() {
             const now = new Date();
             const scrollArea = document.getElementById('calendar-scroll-area');
             scrollArea.innerHTML = '';
-            calMonthsData = [];
-
-            // -12개월부터 +12개월까지 총 25개월 렌더링
-            let currentIdx = -1;
             for(let i = -12; i <= 12; i++) {
                 let d = new Date(now.getFullYear(), now.getMonth() + i, 1);
-                let y = d.getFullYear();
-                let m = d.getMonth();
-                
-                let sectionId = `cal-month-${y}-${m}`;
-                let html = generateMonthHTML(y, m, sectionId);
-                scrollArea.innerHTML += html;
-                calMonthsData.push({ year: y, month: m, id: sectionId });
-                if(i === 0) currentIdx = calMonthsData.length - 1;
+                scrollArea.innerHTML += generateMonthHTML(d.getFullYear(), d.getMonth(), `cal-month-${d.getFullYear()}-${d.getMonth()}`);
             }
-
             renderCalendarSchedules();
         }
 
         function generateMonthHTML(y, m, id) {
             let html = `<div id="${id}" class="cal-month-section" data-year="${y}" data-month="${m}">`;
             html += `<div class="text-center font-bold text-xl mb-4 text-white/80">${y}년 ${m + 1}월</div>`;
-            html += `<div class="cal-grid text-sm mb-2 font-semibold">
-                        <div class="text-red-400">일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div class="text-blue-400">토</div>
-                     </div><div class="cal-grid">`;
+            html += `<div class="cal-grid text-sm mb-2 font-semibold"><div class="text-red-400">일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div class="text-blue-400">토</div></div><div class="cal-grid">`;
 
             let firstDay = new Date(y, m, 1).getDay();
             let daysInMonth = new Date(y, m + 1, 0).getDate();
-            let daysInPrevMonth = new Date(y, m, 0).getDate();
-
-            for(let i = 0; i < firstDay; i++) {
-                html += `<div class="cal-day other-month">${daysInPrevMonth - firstDay + i + 1}</div>`;
-            }
+            for(let i = 0; i < firstDay; i++) html += `<div class="cal-day other-month"></div>`;
 
             const now = new Date();
             for(let i = 1; i <= daysInMonth; i++) {
                 let isToday = (y === now.getFullYear() && m === now.getMonth() && i === now.getDate());
-                let classNames = `cal-day ${isToday ? 'today' : ''}`;
-                
-                // 해당 날짜 클릭 이벤트 연결 (팝업)
-                html += `<div class="${classNames}" onclick="handleDayClick(${y}, ${m}, ${i})">
-                            <span>${i}</span>
-                            <div class="cal-dots h-2 mt-1 flex gap-1"></div>
+                let fullDate = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+                html += `<div class="cal-day ${isToday ? 'today' : ''}" data-date="${fullDate}" onclick="handleDayClick('${fullDate}')">
+                            <span class="z-10">${i}</span>
+                            <div class="cal-event-container z-0"></div>
                          </div>`;
             }
-
+            
             let totalCells = firstDay + daysInMonth;
-            let nextDays = (7 - (totalCells % 7)) % 7;
-            for(let i = 1; i <= nextDays; i++) {
-                html += `<div class="cal-day other-month">${i}</div>`;
-            }
-
+            for(let i = 1; i <= (7 - (totalCells % 7)) % 7; i++) html += `<div class="cal-day other-month"></div>`;
             html += `</div></div>`;
             return html;
         }
 
-        // 스크롤 시 중앙에 위치한 달을 판단하여 상단 텍스트 갱신 (디바운스 적용)
         let scrollTimeout;
         function handleCalendarScroll() {
             if(scrollTimeout) clearTimeout(scrollTimeout);
             scrollTimeout = setTimeout(() => {
                 const area = document.getElementById('calendar-scroll-area');
-                const sections = area.querySelectorAll('.cal-month-section');
-                let closest = null;
-                let minDiff = Infinity;
-                
+                let closest = null; let minDiff = Infinity;
                 const areaCenter = area.getBoundingClientRect().top + (area.offsetHeight / 2);
-
-                sections.forEach(sec => {
-                    const rect = sec.getBoundingClientRect();
-                    const secCenter = rect.top + (rect.height / 2);
-                    const diff = Math.abs(areaCenter - secCenter);
-                    if(diff < minDiff) {
-                        minDiff = diff;
-                        closest = sec;
-                    }
+                area.querySelectorAll('.cal-month-section').forEach(sec => {
+                    const diff = Math.abs(areaCenter - (sec.getBoundingClientRect().top + (sec.getBoundingClientRect().height / 2)));
+                    if(diff < minDiff) { minDiff = diff; closest = sec; }
                 });
-
-                if(closest) {
-                    const y = closest.getAttribute('data-year');
-                    const m = closest.getAttribute('data-month');
-                    document.getElementById('cal-current-indicator').textContent = `${y}년 ${parseInt(m)+1}월`;
-                }
+                if(closest) document.getElementById('cal-current-indicator').textContent = `${closest.getAttribute('data-year')}년 ${parseInt(closest.getAttribute('data-month'))+1}월`;
             }, 50);
         }
 
         function scrollToCurrentMonth() {
             const now = new Date();
-            const targetId = `cal-month-${now.getFullYear()}-${now.getMonth()}`;
-            const targetEl = document.getElementById(targetId);
-            const area = document.getElementById('calendar-scroll-area');
-            if(targetEl && area) {
-                // 부드럽게 중앙으로 스크롤 (scroll-snap 때문에 맞춰짐)
-                targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                document.getElementById('cal-current-indicator').textContent = `${now.getFullYear()}년 ${now.getMonth()+1}월`;
-            }
+            const el = document.getElementById(`cal-month-${now.getFullYear()}-${now.getMonth()}`);
+            if(el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); document.getElementById('cal-current-indicator').textContent = `${now.getFullYear()}년 ${now.getMonth()+1}월`; }
         }
+        function scrollToToday() { scrollToCurrentMonth(); }
 
-        function scrollToToday() {
-            scrollToCurrentMonth();
-            setTimeout(() => {
-                const todayEl = document.querySelector('.cal-day.today');
-                if(todayEl) {
-                    todayEl.style.transform = 'scale(1.1)';
-                    todayEl.style.backgroundColor = 'rgba(255,255,255,0.4)';
-                    setTimeout(() => {
-                        todayEl.style.transform = 'scale(1)';
-                        todayEl.style.backgroundColor = 'rgba(255,255,255,0.2)';
-                    }, 500);
-                }
-            }, 300);
-        }
-
-        // 달력에 일정 점(dot) 표시
         function renderCalendarSchedules() {
-            document.querySelectorAll('.cal-dots').forEach(el => el.innerHTML = '');
+            document.querySelectorAll('.cal-event-container').forEach(el => el.innerHTML = '');
             
+            // 학사 일정(Neis) 렌더링
+            neisSchedulesData.forEach(s => {
+                const dayEl = document.querySelector(`.cal-day[data-date="${s.date}"]`);
+                if(dayEl) {
+                    const container = dayEl.querySelector('.cal-event-container');
+                    container.innerHTML += `<div class="cal-pill neis single" onclick="event.stopPropagation(); showCustomModal({title: '학사일정', message: '${s.title}'})">${s.title}</div>`;
+                }
+            });
+
+            // 사용자 커스텀 일정 렌더링
             userCustomSchedules.forEach(s => {
-                const [y, m, d] = s.date.split('-');
-                const section = document.getElementById(`cal-month-${y}-${parseInt(m)-1}`);
-                if(section) {
-                    // nth-child 같은 복잡한 접근 대신, 안전하게 span 텍스트 매칭
-                    const days = section.querySelectorAll('.cal-day:not(.other-month)');
-                    days.forEach(dayEl => {
-                        if(dayEl.querySelector('span').textContent === parseInt(d).toString()) {
-                            const dots = dayEl.querySelector('.cal-dots');
-                            if(dots.children.length < 3) {
-                                dots.innerHTML += `<span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>`;
-                            }
-                        }
-                    });
+                let startD = new Date(s.date);
+                let endD = new Date(s.endDate || s.date);
+                
+                for (let d = new Date(startD); d <= endD; d.setDate(d.getDate() + 1)) {
+                    let dStr = formatDate(d);
+                    const dayEl = document.querySelector(`.cal-day[data-date="${dStr}"]`);
+                    
+                    if (dayEl) {
+                        const container = dayEl.querySelector('.cal-event-container');
+                        const isStart = d.getTime() === startD.getTime();
+                        const isEnd = d.getTime() === endD.getTime();
+                        const isSingle = isStart && isEnd;
+                        
+                        let pillClass = "cal-pill";
+                        if(isSingle) pillClass += " single";
+                        else if(isStart) pillClass += " start";
+                        else if(isEnd) pillClass += " end";
+                        else pillClass += " mid";
+                        
+                        container.innerHTML += `<div class="${pillClass}" onclick="event.stopPropagation(); openScheduleModal(new Date('${dStr}'), '${s.id}')">${isStart ? s.title : '&nbsp;'}</div>`;
+                    }
                 }
             });
         }
 
-        function handleDayClick(y, m, d) {
-            const date = new Date(y, m, d);
-            openScheduleModal(date);
+        function handleDayClick(dateStr) { openScheduleModal(new Date(dateStr)); }
+
+        // --- 모달 관리 ---
+        function formatDate(date) {
+            return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
         }
 
-        // --- 7. 통합 일정 팝업 (모달) 관리 ---
-        function openScheduleModal(date) {
+        function openScheduleModal(date, editId = null) {
             selectedModalDate = date;
-            const y = date.getFullYear();
-            const m = String(date.getMonth()+1).padStart(2,'0');
-            const d = String(date.getDate()).padStart(2,'0');
+            document.getElementById('modal-date-title').textContent = `${date.getFullYear()}년 ${date.getMonth()+1}월 ${date.getDate()}일`;
             
-            document.getElementById('modal-date-title').textContent = `${y}년 ${m}월 ${d}일 일정`;
             document.getElementById('modal-event-title').value = '';
+            document.getElementById('modal-end-date').value = formatDate(date);
+            document.getElementById('modal-editing-id').value = '';
+            document.getElementById('modal-add-title').textContent = "새 스케줄 추가";
+
+            if(editId) {
+                const target = userCustomSchedules.find(s => s.id === editId);
+                if(target) {
+                    document.getElementById('modal-event-title').value = target.title;
+                    document.getElementById('modal-end-date').value = target.endDate || target.date;
+                    document.getElementById('modal-start-hour').value = target.start;
+                    document.getElementById('modal-end-hour').value = target.end;
+                    document.getElementById('modal-editing-id').value = target.id;
+                    document.getElementById('modal-add-title').textContent = "스케줄 수정";
+                }
+            }
             
             renderModalScheduleList();
             
             const modal = document.getElementById('schedule-modal');
             modal.classList.remove('hidden');
-            // 애니메이션을 위한 지연
             setTimeout(() => modal.classList.remove('opacity-0'), 10);
         }
 
@@ -802,32 +1299,25 @@
             const modal = document.getElementById('schedule-modal');
             modal.classList.add('opacity-0');
             setTimeout(() => modal.classList.add('hidden'), 300);
-            
-            // 닫을 때 캘린더 및 타임라인 갱신
-            renderTimelineSchedules(selectedModalDate);
-            renderCalendarSchedules();
+            renderTimelineSchedules(selectedModalDate); renderCalendarSchedules();
         }
 
         function renderModalScheduleList() {
             const list = document.getElementById('modal-schedule-list');
-            const dateStr = `${selectedModalDate.getFullYear()}-${String(selectedModalDate.getMonth()+1).padStart(2,'0')}-${String(selectedModalDate.getDate()).padStart(2,'0')}`;
-            const daySchedules = userCustomSchedules.filter(s => s.date === dateStr);
+            const dateStr = formatDate(selectedModalDate);
             
-            if(daySchedules.length === 0) {
-                list.innerHTML = '<p class="text-white/50 text-sm text-center py-4">등록된 일정이 없습니다.</p>';
-                return;
-            }
-            
-            // 시간순 정렬
+            const daySchedules = userCustomSchedules.filter(s => dateStr >= s.date && dateStr <= (s.endDate || s.date));
             daySchedules.sort((a,b) => parseInt(a.start) - parseInt(b.start));
             
+            if(daySchedules.length === 0) { list.innerHTML = '<p class="text-white/50 text-sm text-center py-4">등록된 일정이 없습니다.</p>'; return; }
+            
             list.innerHTML = daySchedules.map(s => `
-                <div class="bg-white/10 rounded-xl p-3 flex justify-between items-center border border-white/10">
+                <div class="bg-white/10 rounded-xl p-3 flex justify-between items-center border border-white/10 cursor-pointer hover:bg-white/20 transition" onclick="openScheduleModal(new Date('${dateStr}'), '${s.id}')">
                     <div>
-                        <div class="text-xs text-white/70 mb-1">${s.start}:00 ~ ${s.end}:00</div>
+                        <div class="text-xs text-white/70 mb-1">${s.date !== (s.endDate || s.date) ? '연속일정' : s.start+':00 ~ '+s.end+':00'}</div>
                         <div class="text-sm font-semibold">${s.title}</div>
                     </div>
-                    <button onclick="deleteModalSchedule('${s.id}')" class="text-red-400 hover:text-red-300 text-xs bg-red-500/20 px-2 py-1 rounded">삭제</button>
+                    <button onclick="event.stopPropagation(); deleteModalSchedule('${s.id}')" class="text-red-400 hover:text-red-300 text-xs bg-red-500/20 px-2 py-1 rounded">삭제</button>
                 </div>
             `).join('');
         }
@@ -836,39 +1326,38 @@
             const title = document.getElementById('modal-event-title').value.trim();
             const start = parseInt(document.getElementById('modal-start-hour').value);
             const end = parseInt(document.getElementById('modal-end-hour').value);
+            const endDateStr = document.getElementById('modal-end-date').value;
+            const editId = document.getElementById('modal-editing-id').value;
             
-            if(!title) { alert('내용을 입력해주세요.'); return; }
-            if(start >= end) { alert('종료 시간은 시작 시간보다 늦어야 합니다.'); return; }
+            if(!title) { showCustomModal({message: '내용을 입력해주세요.'}); return; }
             
-            const dateStr = `${selectedModalDate.getFullYear()}-${String(selectedModalDate.getMonth()+1).padStart(2,'0')}-${String(selectedModalDate.getDate()).padStart(2,'0')}`;
+            const dateStr = formatDate(selectedModalDate);
+            if(endDateStr < dateStr) { showCustomModal({message: '종료 날짜는 시작 날짜보다 빠를 수 없습니다.'}); return; }
+            if(dateStr === endDateStr && start >= end) { showCustomModal({message: '종료 시간은 시작 시간보다 늦어야 합니다.'}); return; }
             
-            // 중복시간 체크 간소화
-            const overlap = userCustomSchedules.find(s => s.date === dateStr && ((start >= s.start && start < s.end) || (end > s.start && end <= s.end)));
-            if(overlap) {
-                if(!confirm('해당 시간에 이미 일정이 있습니다. 계속 추가하시겠습니까?')) return;
+            if(editId) {
+                userCustomSchedules = userCustomSchedules.map(s => s.id === editId ? { ...s, title, endDate: endDateStr, start, end } : s);
+            } else {
+                userCustomSchedules.push({ id: 'sch_' + Date.now(), date: dateStr, endDate: endDateStr, title, start, end });
             }
             
-            const newSchedule = {
-                id: 'sch_' + Date.now(),
-                date: dateStr,
-                title,
-                start,
-                end
-            };
-            
-            userCustomSchedules.push(newSchedule);
             localStorage.setItem('userCustomSchedules', JSON.stringify(userCustomSchedules));
-            
             document.getElementById('modal-event-title').value = '';
+            document.getElementById('modal-editing-id').value = '';
+            document.getElementById('modal-add-title').textContent = "새 스케줄 추가";
             renderModalScheduleList();
         }
 
         function deleteModalSchedule(id) {
-            if(confirm('이 일정을 삭제하시겠습니까?')) {
-                userCustomSchedules = userCustomSchedules.filter(s => s.id !== id);
-                localStorage.setItem('userCustomSchedules', JSON.stringify(userCustomSchedules));
-                renderModalScheduleList();
-            }
+            showCustomModal({
+                message: "이 일정을 삭제하시겠습니까?",
+                showCancel: true,
+                onConfirm: () => {
+                    userCustomSchedules = userCustomSchedules.filter(s => s.id !== id);
+                    localStorage.setItem('userCustomSchedules', JSON.stringify(userCustomSchedules));
+                    renderModalScheduleList();
+                }
+            });
         }
     </script>
 </body>
