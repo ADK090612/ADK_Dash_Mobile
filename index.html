@@ -212,8 +212,8 @@
             
             <div class="relative w-full flex flex-col gap-1">
                 <div class="flex gap-2 w-full">
-                    <input type="text" id="input-school" placeholder="학교명 검색" class="flex-1 bg-white/10 border border-white/20 rounded-2xl px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-white/50 transition">
-                    <button onclick="searchSchool()" class="bg-white/20 hover:bg-white/30 text-white rounded-2xl px-4 font-bold transition whitespace-nowrap">검색</button>
+                    <input type="text" id="input-school" placeholder="학교명 검색" class="flex-1 min-w-0 bg-white/10 border border-white/20 rounded-2xl px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-white/50 transition">
+                    <button onclick="searchSchool()" class="shrink-0 bg-white/20 hover:bg-white/30 text-white rounded-2xl px-4 font-bold transition whitespace-nowrap">검색</button>
                 </div>
                 <div id="school-search-results" class="absolute top-[52px] left-0 w-full mt-1 bg-black/90 backdrop-blur-md border border-white/20 rounded-xl overflow-hidden z-50 hidden max-h-48 overflow-y-auto hide-scrollbar"></div>
             </div>
