@@ -84,6 +84,12 @@
 
         .d-1 { animation-delay: 0.1s; } .d-2 { animation-delay: 0.2s; } .d-3 { animation-delay: 0.3s; }
 
+        /* 브리프 타이핑 효과용 CSS */
+        .char-span {
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
         /* --- 타임라인 CSS --- */
         .timeline-scroll-wrapper {
             position: relative; height: 100%; overflow-y: auto; padding-right: 5px; scroll-behavior: smooth;
@@ -203,7 +209,15 @@
         <div id="setup-form" class="w-full max-w-sm liquid-glass card p-6 flex flex-col gap-4 opacity-0 transition-opacity duration-500 translate-y-4">
             <h2 class="text-xl font-semibold mb-2">기본 정보 설정</h2>
             <input type="text" id="input-name" placeholder="이름" class="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-white/50 transition">
-            <input type="text" id="input-school" value="대륜고등학교" readonly class="w-full bg-black/20 border border-white/10 rounded-2xl px-4 py-3 text-white/70 cursor-not-allowed">
+            
+            <div class="relative w-full flex flex-col gap-1">
+                <div class="flex gap-2 w-full">
+                    <input type="text" id="input-school" placeholder="학교명 검색" class="flex-1 bg-white/10 border border-white/20 rounded-2xl px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-white/50 transition">
+                    <button onclick="searchSchool()" class="bg-white/20 hover:bg-white/30 text-white rounded-2xl px-4 font-bold transition whitespace-nowrap">검색</button>
+                </div>
+                <div id="school-search-results" class="absolute top-[52px] left-0 w-full mt-1 bg-black/90 backdrop-blur-md border border-white/20 rounded-xl overflow-hidden z-50 hidden max-h-48 overflow-y-auto hide-scrollbar"></div>
+            </div>
+
             <div class="flex gap-2">
                 <select id="input-grade" class="flex-1 bg-white/10 border border-white/20 rounded-2xl px-4 py-3 text-white focus:outline-none appearance-none">
                     <option value="" disabled selected class="text-black">학년</option>
@@ -244,6 +258,13 @@
                 </div>
             </section>
 
+            <section class="liquid-glass card p-5 anim-box d-1 mt-2" id="brief-section">
+                <h3 class="text-lg font-semibold mb-3 anim-text d-1">요약✨</h3>
+                <div id="brief-content" class="text-sm leading-relaxed text-white/90 min-h-[40px]" data-last-brief="">
+                    생각하는 중...
+                </div>
+            </section>
+
             <section class="liquid-glass card p-5 anim-box d-1 mt-2">
                 <div class="flex justify-between items-center mb-3">
                     <div class="flex items-center gap-2">
@@ -252,10 +273,10 @@
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                         </button>
                     </div>
-                    <span class="text-xs text-white/50" id="weather-location">대구</span>
+                    <span class="text-xs text-white/50" id="weather-location">위치 확인 중...</span>
                 </div>
                 <div id="weather-content" class="flex items-center gap-4 text-white/90">
-                    <div class="text-sm">날씨 정보를 불러오는 중...</div>
+                    <div class="text-sm text-white/50">날씨 정보를 불러오는 중...</div>
                 </div>
             </section>
             
@@ -267,9 +288,13 @@
             </section>
 
             <section class="liquid-glass card p-5 anim-box d-2">
-                <h3 class="text-lg font-semibold mb-3 anim-text d-2">오늘의 급식 🍱</h3>
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-lg font-semibold anim-text d-2">오늘의 급식 🍱</h3>
+                    <button onclick="showAllergyInfo()" class="text-xs text-white/80 bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition active:scale-95">알러지 정보 표시</button>
+                </div>
                 <div id="meal-content" class="text-sm leading-relaxed text-white/90 min-h-[60px]">급식 정보를 불러오는 중...</div>
             </section>
+            
             <section class="liquid-glass card p-5 anim-box d-3">
                 <h3 class="text-lg font-semibold mb-3 anim-text d-3">다가오는 학사일정 📅</h3>
                 <ul id="home-schedule-list" class="text-sm space-y-2 min-h-[60px]">
@@ -324,6 +349,10 @@
                     <div class="px-5 py-4 flex justify-between items-center border-b border-white/10 cursor-pointer hover:bg-white/5 transition" onclick="editSetting('class')">
                         <span class="font-medium">학급 정보</span>
                         <span class="text-white/70" id="set-info-class">O학년 O반 O번</span>
+                    </div>
+                    <div class="px-5 py-4 flex justify-between items-center border-b border-white/10 cursor-pointer hover:bg-white/5 transition" onclick="editAllergySetting()">
+                        <span class="font-medium">알러지 정보 설정</span>
+                        <span class="text-white/70 text-right w-1/2 truncate" id="set-info-allergy">설정 안됨</span>
                     </div>
                     <div class="px-5 py-4 flex justify-between items-center border-b border-white/10 cursor-pointer hover:bg-white/5 transition" onclick="openPeriodTimeModal()">
                         <span class="font-medium">교시 및 급식 시간 설정</span>
@@ -437,21 +466,42 @@
         const DEFAULT_REGION_CODE = 'D10'; 
         const DEFAULT_SCHOOL_CODE = '7240085';
 
+        // 설정 창에서 임시로 들고 있을 학교 정보 변수
+        let tempSelectedRegionCode = '';
+        let tempSelectedSchoolCode = '';
+        let tempSelectedSchoolName = '';
+
         const DEFAULT_PERIOD_TIMES = [
-            { id: '1', name: '1교시', start: '09:00', end: '09:50' },
-            { id: '2', name: '2교시', start: '10:00', end: '10:50' },
-            { id: '3', name: '3교시', start: '11:00', end: '11:50' },
-            { id: '4', name: '4교시', start: '12:00', end: '12:50' },
-            { id: 'meal', name: '급식시간', start: '12:50', end: '13:50' },
-            { id: '5', name: '5교시', start: '13:50', end: '14:40' },
-            { id: '6', name: '6교시', start: '14:50', end: '15:40' },
-            { id: '7', name: '7교시', start: '15:50', end: '16:40' }
+            { id: '1', name: '1교시', start: '08:30', end: '09:20' },
+            { id: '2', name: '2교시', start: '09:30', end: '10:20' },
+            { id: '3', name: '3교시', start: '10:30', end: '11:20' },
+            { id: '4', name: '4교시', start: '11:30', end: '12:20' },
+            { id: 'meal', name: '급식시간', start: '12:20', end: '13:20' },
+            { id: '5', name: '5교시', start: '13:20', end: '14:10' },
+            { id: '6', name: '6교시', start: '14:20', end: '15:10' },
+            { id: '7', name: '7교시', start: '15:20', end: '16:10' },
+            { id: '8', name: '8교시', start: '16:20', end: '17:10' },
+            { id: '9', name: '9교시', start: '17:20', end: '18:10' }
         ];
+
+        // 식약처 기준 알레르기 유발물질 19종
+        const ALLERGY_INFO = {
+            1: '난류', 2: '우유', 3: '메밀', 4: '땅콩', 5: '대두',
+            6: '밀', 7: '고등어', 8: '게', 9: '새우', 10: '돼지고기',
+            11: '복숭아', 12: '토마토', 13: '아황산류', 14: '호두', 15: '닭고기',
+            16: '쇠고기', 17: '오징어', 18: '조개류(굴,전복,홍합 등)', 19: '잣'
+        };
 
         let userCustomSchedules = JSON.parse(localStorage.getItem('userCustomSchedules') || '[]');
         let neisSchedulesData = JSON.parse(localStorage.getItem('neisSchedules') || '[]');
         let dailyTimetableSchedules = [];
         let selectedModalDate = new Date();
+
+        // 브리프 연동 데이터
+        let weatherBriefData = { temp: 0, condition: '', isRain: false };
+        let todayMealBriefData = '';
+        let detectedAllergiesInMeal = []; // 발견된 알러지 경고 정보 저장
+        let briefInterval = null;
 
         function getPeriodTimes() {
             let saved = localStorage.getItem('periodTimes');
@@ -468,6 +518,50 @@
                 return arr;
             }
             return saved;
+        }
+
+        /* --- 학교 검색 관련 로직 --- */
+        async function searchSchool() {
+            const keyword = document.getElementById('input-school').value.trim();
+            if(!keyword) {
+                alert('학교명을 입력해주세요.');
+                return;
+            }
+
+            const url = `https://open.neis.go.kr/hub/schoolInfo?KEY=${NEIS_API_KEY}&Type=json&pIndex=1&pSize=50&SCHUL_NM=${encodeURIComponent(keyword)}`;
+            
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                const resultContainer = document.getElementById('school-search-results');
+                
+                if(data.schoolInfo && data.schoolInfo[1] && data.schoolInfo[1].row) {
+                    const schools = data.schoolInfo[1].row;
+                    let html = '';
+                    schools.forEach(school => {
+                        html += `<div class="p-3 border-b border-white/10 hover:bg-white/20 cursor-pointer text-sm text-white transition" 
+                                      onclick="selectSchool('${school.SCHUL_NM}', '${school.ATPT_OFCDC_SC_CODE}', '${school.SD_SCHUL_CODE}')">
+                                    ${school.SCHUL_NM} <span class="text-xs text-white/50">(${school.LCTN_SC_NM})</span>
+                                 </div>`;
+                    });
+                    resultContainer.innerHTML = html;
+                    resultContainer.classList.remove('hidden');
+                } else {
+                    resultContainer.innerHTML = '<div class="p-3 text-sm text-white/50 text-center">검색 결과가 없습니다.</div>';
+                    resultContainer.classList.remove('hidden');
+                }
+            } catch(e) {
+                console.error(e);
+                alert('학교 검색 중 오류가 발생했습니다.');
+            }
+        }
+
+        function selectSchool(name, regionCode, schoolCode) {
+            document.getElementById('input-school').value = name;
+            tempSelectedSchoolName = name;
+            tempSelectedRegionCode = regionCode;
+            tempSelectedSchoolCode = schoolCode;
+            document.getElementById('school-search-results').classList.add('hidden');
         }
 
         /* --- 커스텀 모달 관리 로직 --- */
@@ -553,6 +647,19 @@
             for(let i=0; i<=23; i++) startH.innerHTML += `<option value="${i}" class="text-black">${i}:00</option>`;
             for(let i=1; i<=24; i++) endH.innerHTML += `<option value="${i}" class="text-black">${i}:00</option>`;
 
+            // 학교 검색창 입력 시 저장된 학교 정보 초기화 및 엔터키 허용
+            const schoolInput = document.getElementById('input-school');
+            schoolInput.addEventListener('input', () => {
+                tempSelectedRegionCode = '';
+                tempSelectedSchoolCode = '';
+                tempSelectedSchoolName = '';
+            });
+            schoolInput.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    searchSchool();
+                }
+            });
+
             buildTimeline();
             initCalendar();
             checkUserConfig();
@@ -573,19 +680,26 @@
             const now = new Date();
             const msUntilNextHour = (60 - now.getMinutes()) * 60000 - (now.getSeconds() * 1000) - now.getMilliseconds();
             
-            setTimeout(() => {
-                refreshAPIInfo();
-                setInterval(refreshAPIInfo, 3600000);
+            setTimeout(async () => {
+                await fetchWeather();
+                await refreshAPIInfo();
+                setInterval(async () => {
+                    await fetchWeather();
+                    await refreshAPIInfo();
+                }, 3600000);
             }, msUntilNextHour);
         }
 
-        function refreshAPIInfo() {
-            fetchMeal();
-            fetchNeisSchedules();
-            fetchNeisTimetable();
+        async function refreshAPIInfo() {
+            await Promise.all([
+                fetchMeal(),
+                fetchNeisSchedules(),
+                fetchNeisTimetable()
+            ]);
+            updateBrief();
         }
 
-        function checkUserConfig() {
+        async function checkUserConfig() {
             const config = localStorage.getItem('userConfig');
             if (config) {
                 const userData = JSON.parse(config);
@@ -595,10 +709,14 @@
                     updateNavIndicator(document.querySelector('.nav-item.active'));
                     triggerAnimations('home'); 
                 }, 100);
-                fetchWeather(); 
-                refreshAPIInfo();
+                
+                await fetchWeather(); 
+                await refreshAPIInfo();
                 setupHourlyRefresh();
                 renderTimelineSchedules(new Date()); 
+
+                if(briefInterval) clearInterval(briefInterval);
+                briefInterval = setInterval(updateBrief, 60 * 1000); // 1분 주기로 단축
             } else {
                 showOnboarding();
             }
@@ -613,28 +731,40 @@
             }, 1000);
         }
 
-        function saveUserInfo() {
+        async function saveUserInfo() {
             const name = document.getElementById('input-name').value;
             const grade = document.getElementById('input-grade').value;
             const cls = document.getElementById('input-class').value;
             const num = document.getElementById('input-number').value;
 
-            if(!name || !grade || !cls || !num) {
-                showCustomModal({ message: "모든 정보를 입력해주세요." });
+            if(!name || !grade || !cls || !num || !tempSelectedSchoolCode) {
+                showCustomModal({ message: "학교 검색을 포함한 모든 정보를 입력 및 선택해주세요." });
                 return;
             }
 
-            const userData = { name, school: '대륜고등학교', grade, class: cls, number: num };
+            const userData = { 
+                name, 
+                school: tempSelectedSchoolName, 
+                grade, 
+                class: cls, 
+                number: num,
+                regionCode: tempSelectedRegionCode,
+                schoolCode: tempSelectedSchoolCode,
+                allergies: [] // 알레르기 배열 기본 추가
+            };
             localStorage.setItem('userConfig', JSON.stringify(userData));
             
             document.getElementById('onboarding-screen').classList.add('hidden');
             applyUserData(userData);
             showMainApp();
             
-            fetchWeather(); 
-            refreshAPIInfo();
+            await fetchWeather(); 
+            await refreshAPIInfo();
             setupHourlyRefresh();
             renderTimelineSchedules(new Date());
+
+            if(briefInterval) clearInterval(briefInterval);
+            briefInterval = setInterval(updateBrief, 60 * 1000); // 1분 주기로 단축
 
             setTimeout(() => {
                 updateNavIndicator(document.querySelector('.nav-item.active'));
@@ -652,6 +782,13 @@
             document.getElementById('set-info-class').textContent = `${data.grade}학년 ${data.class}반 ${data.number}번`;
             
             document.getElementById('student-id-info').textContent = `${data.school} ${data.grade}학년 ${data.class}반 ${data.number}번 ${data.name}`;
+
+            // 알레르기 설정 표시
+            let allergyText = '설정 안됨';
+            if(data.allergies && data.allergies.length > 0) {
+                allergyText = data.allergies.map(num => ALLERGY_INFO[num]).join(', ');
+            }
+            document.getElementById('set-info-allergy').textContent = allergyText;
         }
 
         function showMainApp() {
@@ -747,15 +884,49 @@
                         { placeholder: "번호 (예: 15)", value: userData.number }
                     ],
                     showCancel: true,
-                    onConfirm: (vals) => {
+                    onConfirm: async (vals) => {
                         if(vals[0] && vals[1] && vals[2]) {
                             userData.grade = vals[0]; userData.class = vals[1]; userData.number = vals[2];
                             localStorage.setItem('userConfig', JSON.stringify(userData)); applyUserData(userData);
-                            fetchNeisTimetable();
+                            await fetchNeisTimetable();
+                            updateBrief();
                         }
                     }
                 });
             }
+        }
+
+        function editAllergySetting() {
+            const userData = JSON.parse(localStorage.getItem('userConfig'));
+            const current = (userData.allergies || []).join(', ');
+            showCustomModal({
+                title: "알러지 정보 설정",
+                message: "알러지 번호를 쉼표(,)로 구분하여 입력하세요.\n(예: 1, 2, 5)\n\n1.난류 2.우유 3.메밀 4.땅콩 5.대두 6.밀 7.고등어 8.게 9.새우 10.돼지고기 11.복숭아 12.토마토 13.아황산류 14.호두 15.닭고기 16.쇠고기 17.오징어 18.조개류 19.잣",
+                inputs: [{ placeholder: "번호 입력 (쉼표로 구분)", value: current }],
+                showCancel: true,
+                onConfirm: async (vals) => {
+                    const input = vals[0].trim();
+                    let newAllergies = [];
+                    if(input) {
+                        newAllergies = input.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n) && n >= 1 && n <= 19);
+                    }
+                    userData.allergies = newAllergies;
+                    localStorage.setItem('userConfig', JSON.stringify(userData));
+                    applyUserData(userData);
+                    await fetchMeal(); // 바뀐 설정으로 다시 요약 계산 및 렌더링
+                    updateBrief();
+                }
+            });
+        }
+
+        function showAllergyInfo() {
+            const info = Object.entries(ALLERGY_INFO).map(([k, v]) => `${k}. ${v}`).join('\n');
+            showCustomModal({
+                title: "알레르기 유발 물질 안내",
+                message: info,
+                showCancel: false,
+                onConfirm: () => {}
+            });
         }
 
         /* --- 교시 설정 커스텀 드래그 & 드롭 --- */
@@ -880,7 +1051,7 @@
             setTimeout(() => modal.classList.add('hidden'), 300);
         }
 
-        function savePeriodTimes() {
+        async function savePeriodTimes() {
             const items = document.querySelectorAll('.period-item');
             const newTimes = [];
             items.forEach(item => {
@@ -893,7 +1064,8 @@
             });
             localStorage.setItem('periodTimes', JSON.stringify(newTimes));
             closePeriodTimeModal();
-            fetchNeisTimetable();
+            await fetchNeisTimetable();
+            updateBrief();
             showCustomModal({message: "시간대 설정이 성공적으로 저장되었습니다.", title: "알림"});
         }
 
@@ -1153,8 +1325,36 @@
 
         // --- 외부 API 연동 기능 ---
         async function fetchWeather() {
+            return new Promise((resolve) => {
+                document.getElementById('weather-content').innerHTML = '<div class="text-sm text-white/50">위치 파악 중...</div>';
+                
+                // HTML5 GPS (Geolocation API) 사용 시도
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        async (position) => {
+                            const lat = position.coords.latitude;
+                            const lon = position.coords.longitude;
+                            await fetchWeatherData(`lat=${lat}&lon=${lon}`);
+                            resolve();
+                        },
+                        async (error) => {
+                            console.warn("GPS 권한 거부 또는 획득 실패. 기본 지역(대구)으로 대체합니다.");
+                            await fetchWeatherData(`q=Daegu`);
+                            resolve();
+                        },
+                        { timeout: 5000 } // 너무 길게 멈춰있지 않도록 타임아웃 5초 설정
+                    );
+                } else {
+                    // GPS 지원하지 않는 브라우저
+                    fetchWeatherData(`q=Daegu`).then(resolve);
+                }
+            });
+        }
+
+        // 실제 OpenWeatherMap API 호출을 담당하는 별도 함수
+        async function fetchWeatherData(query) {
             try {
-                const url = `https://api.openweathermap.org/data/2.5/weather?q=Daegu&appid=${OPENWEATHER_API_KEY}&units=metric&lang=kr`;
+                const url = `https://api.openweathermap.org/data/2.5/weather?${query}&appid=${OPENWEATHER_API_KEY}&units=metric&lang=kr`;
                 const res = await fetch(url);
                 const data = await res.json();
                 
@@ -1162,6 +1362,9 @@
                     const temp = Math.round(data.main.temp);
                     const desc = data.weather[0].description;
                     const icon = data.weather[0].icon;
+                    const cityName = data.name; // API가 반환한 GPS 기반 실제 동네/도시 이름
+                    
+                    document.getElementById('weather-location').textContent = cityName;
                     document.getElementById('weather-content').innerHTML = `
                         <img src="https://openweathermap.org/img/wn/${icon}.png" alt="weather" class="w-10 h-10">
                         <div>
@@ -1169,12 +1372,22 @@
                             <div class="text-sm text-white/70">${desc}</div>
                         </div>
                     `;
+                    
+                    // 브리프용 날씨 데이터 업데이트
+                    weatherBriefData.temp = temp;
+                    weatherBriefData.condition = data.weather[0].main.toLowerCase();
+                    weatherBriefData.isRain = weatherBriefData.condition.includes('rain') || desc.includes('비');
+
                 } else {
+                    document.getElementById('weather-location').textContent = '알 수 없음';
                     document.getElementById('weather-content').innerHTML = '<div class="text-sm text-white/50">날씨 정보를 가져올 수 없습니다.</div>';
+                    weatherBriefData = { temp: 0, condition: '', isRain: false };
                 }
             } catch(e) {
                 console.error(e);
+                document.getElementById('weather-location').textContent = '오류';
                 document.getElementById('weather-content').innerHTML = '<div class="text-sm text-white/50">날씨 정보를 불러오지 못했습니다.</div>';
+                weatherBriefData = { temp: 0, condition: '', isRain: false };
             }
         }
 
@@ -1183,21 +1396,85 @@
                 const today = new Date();
                 const ymd = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
                 
-                const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${DEFAULT_REGION_CODE}&SD_SCHUL_CODE=${DEFAULT_SCHOOL_CODE}&MLSV_YMD=${ymd}`;
+                const config = JSON.parse(localStorage.getItem('userConfig'));
+                const regionCode = config ? config.regionCode : DEFAULT_REGION_CODE;
+                const schoolCode = config ? config.schoolCode : DEFAULT_SCHOOL_CODE;
+                const userAllergies = config && config.allergies ? config.allergies : [];
+
+                const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${regionCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_YMD=${ymd}`;
                 
                 const res = await fetch(url);
                 const data = await res.json();
                 
+                detectedAllergiesInMeal = [];
+
                 if (data.mealServiceDietInfo && data.mealServiceDietInfo[1] && data.mealServiceDietInfo[1].row) {
                     const mealStr = data.mealServiceDietInfo[1].row[0].DDISH_NM;
-                    const cleanMeal = mealStr.replace(/<br\/>/g, ', ').replace(/\([^)]*\)/g, '');
-                    document.getElementById('meal-content').innerHTML = cleanMeal;
+                    
+                    const rawItems = mealStr.split('<br/>');
+                    let displayHtml = '';
+                    let briefMealNames = [];
+
+                    rawItems.forEach(item => {
+                        // 요약용 메뉴 이름 추출 (알러지 숫자 및 괄호 제거)
+                        let textPart = item.replace(/[0-9]+\./g, '').replace(/\([^)]*\)/g, '').replace(/[^가-힣a-zA-Z0-9\s]/g, '').trim();
+                        briefMealNames.push(textPart);
+
+                        // 알러지 번호 추출
+                        let nums = [];
+                        const regex = /([0-9]+)\./g; 
+                        let match;
+                        while ((match = regex.exec(item)) !== null) {
+                            nums.push(parseInt(match[1]));
+                        }
+                        
+                        const parenMatch = item.match(/\((.*?)\)/);
+                        if(parenMatch) {
+                           const pNums = parenMatch[1].match(/[0-9]+/g);
+                           if(pNums) pNums.forEach(n => nums.push(parseInt(n)));
+                        }
+                        
+                        nums = [...new Set(nums)]; 
+                        
+                        // 사용자 알러지 감지
+                        let hasWarning = false;
+                        let matchedUserAllergies = [];
+                        nums.forEach(n => {
+                            if (userAllergies.includes(n)) {
+                                hasWarning = true;
+                                matchedUserAllergies.push(n);
+                            }
+                        });
+
+                        if (hasWarning) {
+                            detectedAllergiesInMeal.push({ menu: textPart, matchedAllergies: matchedUserAllergies });
+                        }
+
+                        // 화면 출력용 HTML 작성 (사용자 등록 알러지 번호는 빨간색 하이라이트)
+                        let itemHtml = item;
+                        if (userAllergies.length > 0) {
+                            itemHtml = itemHtml.replace(/([0-9]+)(\.)/g, (m, p1, p2) => {
+                                const num = parseInt(p1);
+                                if (userAllergies.includes(num)) {
+                                    return `<span class="text-red-500 font-bold">${p1}</span>${p2}`;
+                                }
+                                return m;
+                            });
+                        }
+
+                        displayHtml += `<div>${itemHtml}</div>`;
+                    });
+                    
+                    document.getElementById('meal-content').innerHTML = displayHtml;
+                    todayMealBriefData = briefMealNames.join(', ');
                 } else {
-                    document.getElementById('meal-content').innerHTML = '<div class="text-white/50">오늘의 급식 정보가 없습니다.</div>';
+                    document.getElementById('meal-content').innerHTML = '<div class="text-white/50">급식 정보가 없습니다.😢</div>';
+                    todayMealBriefData = '';
                 }
             } catch(e) {
                 console.error(e);
-                document.getElementById('meal-content').innerHTML = '<div class="text-white/50">급식 정보를 불러오지 못했습니다.</div>';
+                document.getElementById('meal-content').innerHTML = '<div class="text-white/50">NEIS에서 급식 정보를 불러오지 못했습니다.😢</div>';
+                todayMealBriefData = '';
             }
         }
 
@@ -1214,7 +1491,11 @@
                 toDate.setFullYear(today.getFullYear() + 1);
                 const toYmd = `${toDate.getFullYear()}${String(toDate.getMonth() + 1).padStart(2, '0')}${String(toDate.getDate()).padStart(2, '0')}`;
 
-                const url = `https://open.neis.go.kr/hub/SchoolSchedule?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${DEFAULT_REGION_CODE}&SD_SCHUL_CODE=${DEFAULT_SCHOOL_CODE}&AA_FROM_YMD=${fromYmd}&AA_TO_YMD=${toYmd}&pSize=1000`;
+                const config = JSON.parse(localStorage.getItem('userConfig'));
+                const regionCode = config ? config.regionCode : DEFAULT_REGION_CODE;
+                const schoolCode = config ? config.schoolCode : DEFAULT_SCHOOL_CODE;
+
+                const url = `https://open.neis.go.kr/hub/SchoolSchedule?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${regionCode}&SD_SCHUL_CODE=${schoolCode}&AA_FROM_YMD=${fromYmd}&AA_TO_YMD=${toYmd}&pSize=1000`;
                 
                 const res = await fetch(url);
                 const data = await res.json();
@@ -1280,11 +1561,11 @@
                     list.innerHTML = html || '<li class="text-white/50">다가오는 특별한 일정이 없습니다.</li>';
                     renderCalendarSchedules();
                 } else {
-                    list.innerHTML = '<li class="text-white/50">등록된 학사일정이 없습니다.</li>';
+                    list.innerHTML = '<li class="text-white/50">NEIS에 등록된 학사일정이 없습니다.</li>';
                 }
             } catch(e) {
                 console.error(e);
-                document.getElementById('home-schedule-list').innerHTML = '<li class="text-white/50">일정을 불러오지 못했습니다.</li>';
+                document.getElementById('home-schedule-list').innerHTML = '<li class="text-white/50">NEIS에서 일정을 불러오지 못했습니다.😢</li>';
             }
         }
 
@@ -1295,7 +1576,10 @@
             const today = new Date();
             const ymd = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
             
-            const url = `https://open.neis.go.kr/hub/hisTimetable?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${DEFAULT_REGION_CODE}&SD_SCHUL_CODE=${DEFAULT_SCHOOL_CODE}&ALL_TI_YMD=${ymd}&GRADE=${config.grade}&CLASS_NM=${config.class}`;
+            const regionCode = config.regionCode || DEFAULT_REGION_CODE;
+            const schoolCode = config.schoolCode || DEFAULT_SCHOOL_CODE;
+
+            const url = `https://open.neis.go.kr/hub/hisTimetable?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${regionCode}&SD_SCHUL_CODE=${schoolCode}&ALL_TI_YMD=${ymd}&GRADE=${config.grade}&CLASS_NM=${config.class}`;
             
             try {
                 const res = await fetch(url);
@@ -1348,7 +1632,7 @@
 
                     container.innerHTML = html;
                 } else {
-                    container.innerHTML = '<div class="col-span-2 text-white/50 text-center py-2">오늘 등록된 시간표가 없습니다.</div>';
+                    container.innerHTML = '<div class="col-span-2 text-white/50 text-center py-2">NEIS에 오늘 등록된 시간표가 없습니다.</div>';
                 }
                 
                 renderTimelineSchedules(new Date());
@@ -1358,6 +1642,166 @@
                 document.getElementById('timetable-content').innerHTML = '<div class="col-span-2 text-white/50 py-2">시간표를 불러오지 못했습니다.</div>';
             }
         }
+
+        // --- 브리프 생성 및 업데이트 로직 ---
+        function updateBrief() {
+            const now = new Date();
+            const nowMinutes = now.getHours() * 60 + now.getMinutes();
+            const todayStr = formatDate(now);
+            
+            let nextDay = new Date(now);
+            nextDay.setDate(nextDay.getDate() + 1);
+            const tomorrowStr = formatDate(nextDay);
+
+            let briefText = "";
+
+            // 사용자 이름 추출
+            const config = JSON.parse(localStorage.getItem('userConfig'));
+            const userName = config && config.name ? config.name : '사용자';
+
+            // 교시 정보만 필터링 (급식 등 제외)
+            const periods = dailyTimetableSchedules.filter(s => s.id.startsWith('time_') && !s.title.includes('🍱'));
+            periods.sort((a,b) => (a.sh * 60 + a.sm) - (b.sh * 60 + b.sm));
+
+            let currentPeriod = null;
+            let nextPeriod = null;
+            let currentIndex = -1;
+
+            if (periods.length > 0) {
+                for (let i = 0; i < periods.length; i++) {
+                    const startMins = periods[i].sh * 60 + periods[i].sm;
+                    const endMins = periods[i].eh * 60 + periods[i].em;
+                    if (nowMinutes >= startMins && nowMinutes < endMins) {
+                        currentPeriod = periods[i];
+                        currentIndex = i;
+                        break;
+                    }
+                }
+
+                if (!currentPeriod) {
+                    // 수업시간 밖, 다음 교시가 있는지 확인
+                    for (let i = 0; i < periods.length; i++) {
+                        const startMins = periods[i].sh * 60 + periods[i].sm;
+                        if (nowMinutes < startMins) {
+                            nextPeriod = periods[i];
+                            break;
+                        }
+                    }
+                } else {
+                    if (currentIndex + 1 < periods.length) {
+                        nextPeriod = periods[currentIndex + 1];
+                    }
+                }
+            }
+
+            if (currentPeriod) {
+                // 수업 중
+                const matchCur = currentPeriod.title.match(/\[(.*?)\] (.*)/);
+                if (matchCur) {
+                    briefText += `지금은 ${matchCur[1]} ${matchCur[2]} 입니다. 🙂\n`;
+                } else {
+                    briefText += `지금은 ${currentPeriod.title} 입니다. 🙂\n`;
+                }
+
+                if (nextPeriod) {
+                    const matchNext = nextPeriod.title.match(/\[(.*?)\] (.*)/);
+                    if (matchNext) {
+                        briefText += `다음 교시는 ${matchNext[1]} ${matchNext[2]} 입니다. \n`;
+                    } else {
+                        briefText += `다음 교시는 ${nextPeriod.title} 입니다. \n`;
+                    }
+                } else {
+                    briefText += `오늘의 마지막 수업입니다. 😎\n`;
+                }
+
+                if (currentPeriod.title.includes('4교시') && todayMealBriefData) {
+                    briefText += `오늘의 급식은 ${todayMealBriefData} 입니다. 맛있게 드세요!😊\n`;
+                }
+
+            } else if (nextPeriod && nowMinutes < (periods[periods.length - 1].eh * 60 + periods[periods.length - 1].em)) {
+                // 쉬는 시간
+                const matchNext = nextPeriod.title.match(/\[(.*?)\] (.*)/);
+                if (matchNext) {
+                    briefText += `지금은 쉬는 시간입니다. 다음 교시는 ${matchNext[1]} ${matchNext[2]} 입니다. \n`;
+                } else {
+                    briefText += `지금은 쉬는 시간입니다. 다음 교시는 ${nextPeriod.title} 입니다. \n`;
+                }
+
+                if (nextPeriod.title.includes('4교시') || (nextPeriod.title.includes('5교시') && todayMealBriefData)) {
+                    if (nextPeriod.title.includes('5교시')) {
+                        briefText += `오늘의 급식은 ${todayMealBriefData} 입니다. 맛있게 드세요! 😋\n`;
+                    }
+                }
+            } else {
+                // 수업이 모두 끝난 방과 후 거나 수업이 없는 날
+                let extraMsgs = [];
+                
+                if (weatherBriefData.isRain) {
+                    extraMsgs.push("오늘은 비 예보가 있습니다. 우산을 꼭 챙겨주세요. ☔️\n");
+                }
+                if (weatherBriefData.temp >= 35) {
+                    extraMsgs.push("현재 기온이 35도를 넘습니다. 무더위에 조심하세요. 🥵\n");
+                }
+
+                const allSchedules = [...neisSchedulesData, ...userCustomSchedules];
+                const todaySchedules = allSchedules.filter(s => todayStr >= s.date && todayStr <= (s.endDate || s.date));
+                const tomorrowSchedules = allSchedules.filter(s => tomorrowStr >= s.date && tomorrowStr <= (s.endDate || s.date));
+
+                if (todaySchedules.length > 0) {
+                    const titles = todaySchedules.map(s => s.title).join(', ');
+                    extraMsgs.push(`오늘 예정된 일정은 [${titles}] 입니다.\n`);
+                }
+                if (tomorrowSchedules.length > 0) {
+                    const titles = tomorrowSchedules.map(s => s.title).join(', ');
+                    extraMsgs.push(`내일 예정된 일정은 [${titles}] 입니다.\n`);
+                }
+
+                if (extraMsgs.length > 0) {
+                    briefText += "학교 수업이 없거나 모두 종료된 시간입니다. 😊\n" + extraMsgs.join(' ');
+                } else {
+                    briefText += "현재 진행 중인 수업이나 예정된 특별한 일정이 없습니다. 편안한 시간 보내세요. 😌\n";
+                }
+            }
+
+            // --- 알러지 경고 메시지 병합 ---
+            if (detectedAllergiesInMeal.length > 0) {
+                let warnings = detectedAllergiesInMeal.map(d => {
+                    let allergyNames = d.matchedAllergies.map(n => ALLERGY_INFO[n]).join(', ');
+                    return `${userName}님이 가지고 있는 ${allergyNames}알러지의 유발 물질이 급식 메뉴 중 ${d.menu}에 포함 되어있네요!`;
+                });
+                
+                let allergyWarningMsg = `\n⚠️ ${warnings.join(' ')} 급식 시간에 주의해주세요.`;
+                
+                // 오후 2시(14:00) 이전에만 알러지 경고 띄우기 (급식 시간이 끝난 이후엔 표시 안함)
+                if (nowMinutes < 14 * 60) {
+                    briefText += allergyWarningMsg;
+                }
+            }
+
+            const briefContainer = document.getElementById('brief-content');
+            
+            // 변경사항이 없으면 렌더링 및 애니메이션 갱신 스킵 (1분 마다 호출되더라도 내용이 같으면 무시됨)
+            if (briefContainer.dataset.lastBrief === briefText) {
+                return;
+            }
+
+            briefContainer.dataset.lastBrief = briefText;
+            briefContainer.innerHTML = '';
+            
+            // 타이핑 애니메이션 적용 (새로운 차이점이 생겼을 때만 실행)
+            const chars = briefText.split('');
+            chars.forEach((char, index) => {
+                const span = document.createElement('span');
+                span.textContent = char;
+                span.className = 'char-span';
+                briefContainer.appendChild(span);
+                
+                setTimeout(() => {
+                    span.style.opacity = '1';
+                }, index * 30);
+            });
+        }
+
 
         // --- 타임라인 렌더링 ---
         function buildTimeline() {
@@ -1572,7 +2016,7 @@
             const daySchedules = userCustomSchedules.filter(s => dateStr >= s.date && dateStr <= (s.endDate || s.date));
             daySchedules.sort((a,b) => parseInt(a.start) - parseInt(b.start));
             
-            if(daySchedules.length === 0) { list.innerHTML = '<p class="text-white/50 text-sm text-center py-4">등록된 일정이 없습니다.</p>'; return; }
+            if(daySchedules.length === 0) { list.innerHTML = '<p class="text-white/50 text-sm text-center py-4">NEIS에 등록된 일정이 없습니다.</p>'; return; }
             
             list.innerHTML = daySchedules.map(s => `
                 <div class="bg-white/10 rounded-xl p-3 flex justify-between items-center border border-white/10 cursor-pointer hover:bg-white/20 transition" onclick="openScheduleModal(new Date('${dateStr}'), '${s.id}')">
@@ -1609,6 +2053,7 @@
             document.getElementById('modal-editing-id').value = '';
             document.getElementById('modal-add-title').textContent = "새 스케줄 추가";
             renderModalScheduleList();
+            updateBrief(); // 일정 추가/변경 시 브리프 즉각 업데이트 시도
         }
 
         function deleteModalSchedule(id) {
@@ -1619,6 +2064,7 @@
                     userCustomSchedules = userCustomSchedules.filter(s => s.id !== id);
                     localStorage.setItem('userCustomSchedules', JSON.stringify(userCustomSchedules));
                     renderModalScheduleList();
+                    updateBrief(); // 일정 삭제 시 브리프 업데이트
                 }
             });
         }
