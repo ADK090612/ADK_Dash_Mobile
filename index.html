@@ -562,6 +562,17 @@
             tempSelectedRegionCode = regionCode;
             tempSelectedSchoolCode = schoolCode;
             document.getElementById('school-search-results').classList.add('hidden');
+
+            // --- 추가된 로직: 초등학교일 경우 학년 범위를 6학년까지 확장 ---
+            const gradeSelect = document.getElementById('input-grade');
+            const maxGrade = name.includes('초등학교') ? 6 : 3;
+            
+            let html = '<option value="" disabled selected class="text-black">학년</option>';
+            for(let i = 1; i <= maxGrade; i++) {
+                html += `<option value="${i}" class="text-black">${i}학년</option>`;
+            }
+            gradeSelect.innerHTML = html;
+            // -----------------------------------------------------------------
         }
 
         /* --- 커스텀 모달 관리 로직 --- */
@@ -2054,19 +2065,6 @@
             document.getElementById('modal-add-title').textContent = "새 스케줄 추가";
             renderModalScheduleList();
             updateBrief(); // 일정 추가/변경 시 브리프 즉각 업데이트 시도
-        }
-
-        function deleteModalSchedule(id) {
-            showCustomModal({
-                message: "이 일정을 삭제하시겠습니까?",
-                showCancel: true,
-                onConfirm: () => {
-                    userCustomSchedules = userCustomSchedules.filter(s => s.id !== id);
-                    localStorage.setItem('userCustomSchedules', JSON.stringify(userCustomSchedules));
-                    renderModalScheduleList();
-                    updateBrief(); // 일정 삭제 시 브리프 업데이트
-                }
-            });
         }
     </script>
 </body>
