@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ADK School Info</title>
+    <title>ADK 대시보드</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
@@ -41,7 +41,10 @@
             width: 50vw; height: 50vw; background: radial-gradient(circle, rgba(0, 255, 128, 0.4) 0%, transparent 70%);
             top: 20%; left: 10%; animation-duration: 18s; animation-delay: 0s;
         }
-        .glow-blue {
+                .glow-red {
+            width: 45vw; height: 45vw; background: radial-gradient(circle, rgba(255, 45, 75, 0.35) 0%, transparent 70%);
+            top: 35%; right: 18%; animation-duration: 20s; animation-delay: -11s;
+        }.glow-blue {
             width: 60vw; height: 60vw; background: radial-gradient(circle, rgba(0, 128, 255, 0.4) 0%, transparent 70%);
             bottom: 10%; right: 10%; animation-duration: 22s; animation-delay: -7s;
         }
@@ -155,15 +158,36 @@
         .period-item.opacity-80 { opacity: 0.8; z-index: 50; }
         .period-item.scale-102 { transform: scale(1.02); }
 
+        /* --- 홈 위젯 편집 --- */
+        #home-edit-toggle { position: fixed; top: max(24px, env(safe-area-inset-top)); right: 24px; z-index: 45; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transform: translateY(-6px) scale(0.94); transition: opacity 0.25s ease, transform 0.25s ease; }
+        #home-edit-toggle.visible { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
+        #home-edit-toggle svg { width: 20px; height: 20px; }
+        #home-edit-tools { position: fixed; top: max(24px, env(safe-area-inset-top)); right: 78px; z-index: 45; display: flex; gap: 8px; opacity: 0; pointer-events: none; transform: translateY(-6px); transition: opacity 0.25s ease, transform 0.25s ease; }
+        #home-edit-tools.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
+        .home-edit-tool { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; }
+        .home-edit-tool svg { width: 19px; height: 19px; }
+        #home-widget-menu { position: fixed; top: calc(max(24px, env(safe-area-inset-top)) + 54px); right: 24px; z-index: 60; width: min(260px, calc(100vw - 48px)); }
+        .home-widget-menu-item { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 12px 14px; color: white; font-size: 0.875rem; text-align: left; }
+        #tab-home.home-edit-mode .home-widget { position: relative; padding-top: 3.25rem; }
+        .home-widget-controls { position: absolute; top: 9px; left: 10px; right: 10px; display: flex; align-items: center; justify-content: space-between; z-index: 20; }
+        .home-widget-remove, .home-widget-move { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; background: rgba(0,0,0,0.28); border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); color: rgba(255,255,255,0.9); transition: background 0.2s, transform 0.2s; }
+        .home-widget-remove { color: #fecaca; background: rgba(127,29,29,0.35); }
+        .home-widget-order { display: flex; gap: 6px; }
+        .home-widget-move:disabled { opacity: 0.3; }
+        .home-widget-remove:active, .home-widget-move:active, .home-edit-tool:active { transform: scale(0.93); }
+        #tab-home.home-edit-mode .home-widget { animation: homeWidgetEditIn 0.22s ease both; }
+        @keyframes homeWidgetEditIn { from { opacity: 0.78; transform: scale(0.985); } to { opacity: 1; transform: scale(1); } }
         /* --- 하단 네비게이션 --- */
         .bottom-nav {
             position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
             width: calc(100% - 48px); max-width: 400px;
-            z-index: 50; display: flex; justify-content: space-between; padding: 8px;
+            z-index: 50; display: flex; justify-content: space-between; padding: 8px; touch-action: none;
             background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);
         }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: white; font-size: 0.7rem; transition: all 0.3s ease; position: relative; z-index: 10; padding: 8px 16px; flex: 1; }
         #nav-indicator { position: absolute; top: 8px; bottom: 8px; background: rgba(0, 0, 0, 0.4); border-radius: 9999px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 0; box-shadow: inset 0 1px 4px rgba(0,0,0,0.5); }
+        #nav-indicator.dragging { transition: none; cursor: grabbing; }
+        #nav-indicator { pointer-events: none; }
     </style>
 </head>
 <body>
@@ -171,6 +195,7 @@
     <div id="animated-bg">
         <div class="glow-circle glow-green"></div>
         <div class="glow-circle glow-blue"></div>
+        <div class="glow-circle glow-red"></div>
     </div>
 
     <div class="bezel-gradient-top"></div>
@@ -248,7 +273,7 @@
                     <div class="flex items-center gap-4">
                         <div class="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center text-2xl border border-blue-500/30">🪪</div>
                         <div>
-                            <h3 class="text-lg font-bold text-white">모바일 학생증</h3>
+                            <h3 class="text-lg font-bold text-white">모바일 도서 대출증(베타)</h3>
                             <p class="text-white/60 text-xs mt-0.5">클릭하여 열기 및 인증</p>
                         </div>
                     </div>
@@ -441,8 +466,8 @@
 
     <div id="id-display-modal" class="fixed inset-0 z-[300] flex items-center justify-center bg-black/80 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
         <div class="liquid-glass card p-8 flex flex-col items-center w-11/12 max-w-sm bg-white/90">
-            <h2 class="text-2xl font-bold text-gray-800 mb-2">모바일 학생증</h2>
-            <p class="text-gray-500 text-sm mb-6 font-medium" id="student-id-info">대륜고등학교</p>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">모바일 도서 대출증</h2>
+            <p class="text-gray-500 text-sm mb-6 font-medium" id="student-id-info">profile-school</p>
             
             <div class="bg-white p-4 rounded-xl shadow-inner w-full flex justify-center mb-6">
                 <canvas id="barcode-canvas"></canvas>
@@ -456,6 +481,19 @@
             <div class="flex gap-3 w-full">
                 <button onclick="closeIdDisplay()" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-300 transition">닫기</button>
                 <button onclick="extendIdTimer()" class="flex-1 bg-blue-500 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-blue-600 transition">연장하기</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="allergy-modal-overlay" class="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
+        <div class="liquid-glass card p-6 w-11/12 max-w-sm mx-auto shadow-2xl flex flex-col transform scale-95 transition-transform duration-300" id="allergy-modal-box">
+            <h3 class="text-xl font-bold mb-2">알러지 정보 설정</h3>
+            <p class="text-white/80 text-sm mb-4">해당하는 알러지를 선택하세요.</p>
+            <div id="allergy-checkbox-list" class="grid grid-cols-2 gap-2 mb-4 overflow-y-auto max-h-64 hide-scrollbar">
+            </div>
+            <div class="flex gap-2 justify-end mt-2">
+                <button onclick="closeAllergyModal()" class="px-4 py-2 rounded-xl text-sm font-semibold bg-white/10 hover:bg-white/20 transition">취소</button>
+                <button onclick="saveAllergyModal()" class="px-4 py-2 rounded-xl text-sm font-semibold bg-blue-500/80 hover:bg-blue-500 transition shadow-lg text-white">확인</button>
             </div>
         </div>
     </div>
@@ -805,6 +843,7 @@
         function showMainApp() {
             document.getElementById('main-app').classList.remove('hidden');
             document.getElementById('bottom-navigation').classList.remove('hidden');
+            showHomeEditHint();
         }
 
         /* --- 탭 기능 및 타임라인 정렬 --- */
@@ -827,6 +866,16 @@
                 document.getElementById('main-app').scrollTo({ top: 0, behavior: 'auto' });
             }
             triggerAnimations(tabId);
+            if(tabId === 'home') showHomeEditHint();
+            else {
+                clearTimeout(homeEditHintTimer);
+                const homeTab = document.getElementById('tab-home');
+                homeTab.classList.remove('home-edit-mode');
+                document.getElementById('home-edit-toggle')?.classList.remove('visible');
+                document.getElementById('home-edit-toggle')?.setAttribute('aria-label', '홈 위젯 편집');
+                hideHomeEditTools();
+                renderHomeWidgetControls();
+            }
         }
 
         function centerTimelineOnRedLine() {
@@ -863,6 +912,288 @@
             }
         }
 
+        // 활성 표시자를 포인터에 맞춰 연속 이동하고, 지나간 항목으로 화면을 전환합니다.
+        document.addEventListener('DOMContentLoaded', () => {
+            const nav = document.getElementById('bottom-navigation');
+            const indicator = document.getElementById('nav-indicator');
+            if(!nav || !indicator) return;
+
+            let activePointerId = null;
+            let dragStartX = 0;
+            let dragStartLeft = 0;
+            const selectNavItemAt = (clientX) => {
+                const item = [...nav.querySelectorAll('.nav-item')].find(candidate => {
+                    const rect = candidate.getBoundingClientRect();
+                    return clientX >= rect.left && clientX <= rect.right;
+                });
+                if(item && !item.classList.contains('active')) {
+                    const match = item.getAttribute('onclick')?.match(/switchTab\('([^']+)'/);
+                    if(match) switchTab(match[1], item);
+                }
+            };
+
+            nav.addEventListener('pointerdown', (event) => {
+                const activeItem = nav.querySelector('.nav-item.active');
+                if(!activeItem || !activeItem.contains(event.target)) return;
+                if(event.button !== undefined && event.button !== 0) return;
+                activePointerId = event.pointerId;
+                dragStartX = event.clientX;
+                dragStartLeft = indicator.offsetLeft;
+                indicator.classList.add('dragging');
+                nav.setPointerCapture(event.pointerId);
+                event.preventDefault();
+            });
+            nav.addEventListener('pointermove', (event) => {
+                if(event.pointerId !== activePointerId) return;
+                const maxLeft = nav.clientWidth - indicator.offsetWidth - 8;
+                const nextLeft = Math.max(8, Math.min(maxLeft, dragStartLeft + event.clientX - dragStartX));
+                indicator.style.left = `${nextLeft}px`;
+                selectNavItemAt(event.clientX);
+            });
+            const endDrag = (event) => {
+                if(event.pointerId !== activePointerId) return;
+                activePointerId = null;
+                indicator.classList.remove('dragging');
+                updateNavIndicator(nav.querySelector('.nav-item.active'));
+            };
+            nav.addEventListener('pointerup', endDrag);
+            nav.addEventListener('pointercancel', endDrag);
+            nav.addEventListener('lostpointercapture', endDrag);
+        });
+        // 홈 위젯 표시와 순서는 이 화면에만 저장합니다.
+        const HOME_WIDGETS_KEY = 'adkHomeWidgetLayout';
+        let homeEditHintTimer = null;
+        let homeEditToolsTimer = null;
+        let homeToggleTimer = null;
+        let homePointerX = -1;
+        let homePointerY = -1;
+        let homeWidgetsReady = false;
+        const homeWidgetTitles = ['도서 대출증', '오늘의 요약', '현재 날씨', '오늘의 시간표', '오늘의 급식', '다가오는 학사일정'];
+
+        function getHomeWidgets() {
+            return [...document.querySelectorAll('#tab-home > .home-widget')];
+        }
+
+        function saveHomeWidgetLayout() {
+            const home = document.getElementById('tab-home');
+            const widgets = getHomeWidgets();
+            const hidden = [...home.querySelectorAll('[data-home-widget-hidden="true"]')].map(el => el.dataset.homeWidgetId);
+            try {
+                localStorage.setItem(HOME_WIDGETS_KEY, JSON.stringify({ order: widgets.map(el => el.dataset.homeWidgetId), hidden }));
+            } catch(error) { console.warn('홈 위젯 설정을 저장하지 못했습니다.', error); }
+        }
+
+        function applyHomeWidgetLayout() {
+            const home = document.getElementById('tab-home');
+            if(!home) return;
+            const widgets = [
+                home.querySelector('section[onclick*="openStudentId"]'),
+                home.querySelector('#brief-section'),
+                home.querySelector('#weather-content')?.closest('section'),
+                home.querySelector('#timetable-content')?.closest('section'),
+                home.querySelector('#meal-content')?.closest('section'),
+                home.querySelector('#home-schedule-list')?.closest('section')
+            ].filter(Boolean);
+            widgets.forEach((widget, index) => {
+                widget.classList.add('home-widget');
+                widget.dataset.homeWidgetId = `widget-${index + 1}`;
+                widget.dataset.homeWidgetTitle = homeWidgetTitles[index] || `위젯 ${index + 1}`;
+            });
+            let layout = {};
+            try { layout = JSON.parse(localStorage.getItem(HOME_WIDGETS_KEY) || '{}') || {}; } catch(error) { layout = {}; }
+            const hidden = new Set(Array.isArray(layout.hidden) ? layout.hidden : []);
+            widgets.forEach(widget => {
+                const isHidden = hidden.has(widget.dataset.homeWidgetId);
+                widget.hidden = isHidden;
+                if(isHidden) widget.dataset.homeWidgetHidden = 'true';
+                else delete widget.dataset.homeWidgetHidden;
+            });
+            if(Array.isArray(layout.order)) {
+                const rank = new Map(layout.order.map((id, index) => [id, index]));
+                widgets.sort((a, b) => (rank.get(a.dataset.homeWidgetId) ?? 999) - (rank.get(b.dataset.homeWidgetId) ?? 999));
+                widgets.forEach(widget => home.appendChild(widget));
+            }
+            homeWidgetsReady = true;
+            renderHomeWidgetControls();
+        }
+
+        function ensureHomeEditControls() {
+            if(document.getElementById('home-edit-toggle')) return;
+            const toggle = document.createElement('button');
+            toggle.id = 'home-edit-toggle';
+            toggle.className = 'liquid-glass pill';
+            toggle.type = 'button';
+            toggle.setAttribute('aria-label', '홈 위젯 편집');
+            toggle.title = '홈 위젯 편집';
+            toggle.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L8 18l-4 1 1-4Z"/></svg>';
+            toggle.addEventListener('click', () => {
+                clearTimeout(homeEditHintTimer);
+                document.getElementById('tab-home').classList.toggle('home-edit-mode');
+                const editing = document.getElementById('tab-home').classList.contains('home-edit-mode');
+                toggle.setAttribute('aria-label', '홈 위젯 편집');
+                toggle.title = '홈 위젯 편집';
+                if(editing) {
+                    clearTimeout(homeToggleTimer);
+                    toggle.classList.remove('visible');
+                    showHomeEditTools();
+                } else {
+                    hideHomeEditTools();
+                    showHomeEditToggleForTouch();
+                }
+                renderHomeWidgetControls();
+            });
+            document.body.appendChild(toggle);
+
+            const tools = document.createElement('div');
+            tools.id = 'home-edit-tools';
+            tools.innerHTML = '<button type="button" class="home-edit-tool liquid-glass pill" id="home-widget-add" aria-label="위젯 추가" title="위젯 추가"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button><button type="button" class="home-edit-tool liquid-glass pill" id="home-widget-done" aria-label="편집 완료" title="편집 완료"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg></button>';
+            document.body.appendChild(tools);
+            document.getElementById('home-widget-add').addEventListener('click', toggleHomeWidgetMenu);
+            document.getElementById('home-widget-done').addEventListener('click', () => toggle.click());
+
+            const menu = document.createElement('div');
+            menu.id = 'home-widget-menu';
+            menu.className = 'liquid-glass card p-2 hidden';
+            menu.setAttribute('role', 'menu');
+            document.body.appendChild(menu);
+            document.addEventListener('pointermove', event => {
+                homePointerX = event.clientX;
+                homePointerY = event.clientY;
+                const isHomeVisible = !document.getElementById('tab-home').classList.contains('hidden');
+                const inTopRight = event.clientX >= window.innerWidth / 2 && event.clientY <= window.innerHeight / 2;
+                if(!isHomeVisible || document.getElementById('tab-home').classList.contains('home-edit-mode')) {
+                    clearTimeout(homeToggleTimer);
+                    toggle.classList.remove('visible');
+                } else if(event.pointerType !== 'touch') {
+                    clearTimeout(homeToggleTimer);
+                    toggle.classList.toggle('visible', inTopRight);
+                } else if(inTopRight) {
+                    showHomeEditToggleForTouch();
+                } else {
+                    clearTimeout(homeToggleTimer);
+                    toggle.classList.remove('visible');
+                }
+            });
+            document.addEventListener('pointerdown', event => {
+                if(!menu.classList.contains('hidden') && !menu.contains(event.target) && event.target.id !== 'home-widget-add') menu.classList.add('hidden');
+                const isHomeVisible = !document.getElementById('tab-home').classList.contains('hidden');
+                const inTopRight = event.clientX >= window.innerWidth / 2 && event.clientY <= window.innerHeight / 2;
+                if(isHomeVisible && inTopRight && !document.getElementById('tab-home').classList.contains('home-edit-mode')) {
+                    homePointerX = event.clientX;
+                    homePointerY = event.clientY;
+                    showHomeEditToggleForTouch();
+                }
+            });
+        }
+
+        function showHomeEditHint() {
+            ensureHomeEditControls();
+            if(!homeWidgetsReady) applyHomeWidgetLayout();
+            const inTopRight = homePointerX >= window.innerWidth / 2 && homePointerY <= window.innerHeight / 2;
+            document.getElementById('home-edit-toggle').classList.toggle('visible', inTopRight);
+        }
+
+        function showHomeEditToggleForTouch() {
+            const toggle = document.getElementById('home-edit-toggle');
+            if(!toggle || document.getElementById('tab-home').classList.contains('home-edit-mode')) return;
+            toggle.classList.add('visible');
+            clearTimeout(homeToggleTimer);
+            homeToggleTimer = setTimeout(() => toggle.classList.remove('visible'), 3000);
+        }
+
+        function showHomeEditTools() {
+            const tools = document.getElementById('home-edit-tools');
+            if(!tools) return;
+            tools.classList.add('visible');
+            clearTimeout(homeEditToolsTimer);
+            homeEditToolsTimer = setTimeout(() => {
+                if(!document.getElementById('tab-home').classList.contains('home-edit-mode')) tools.classList.remove('visible');
+            }, 3000);
+        }
+
+        function hideHomeEditTools() {
+            clearTimeout(homeEditToolsTimer);
+            document.getElementById('home-edit-tools')?.classList.remove('visible');
+            document.getElementById('home-widget-menu')?.classList.add('hidden');
+        }
+
+        function toggleHomeWidgetMenu() {
+            const menu = document.getElementById('home-widget-menu');
+            const hiddenWidgets = [...document.querySelectorAll('#tab-home > .home-widget[hidden]')];
+            menu.replaceChildren();
+            if(hiddenWidgets.length === 0) {
+                const empty = document.createElement('p');
+                empty.className = 'px-3 py-3 text-sm text-white/60';
+                empty.textContent = '추가할 위젯이 없습니다.';
+                menu.appendChild(empty);
+            } else {
+                hiddenWidgets.forEach(widget => {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'home-widget-menu-item rounded-xl hover:bg-white/10 transition';
+                    button.setAttribute('role', 'menuitem');
+                    button.innerHTML = `<span>${widget.dataset.homeWidgetTitle}</span><span class="text-white/50 text-lg">＋</span>`;
+                    button.addEventListener('click', () => {
+                        widget.hidden = false;
+                        delete widget.dataset.homeWidgetHidden;
+                        menu.classList.add('hidden');
+                        saveHomeWidgetLayout();
+                        renderHomeWidgetControls();
+                    });
+                    menu.appendChild(button);
+                });
+            }
+            menu.classList.toggle('hidden');
+        }
+
+        function renderHomeWidgetControls() {
+            const home = document.getElementById('tab-home');
+            if(!home) return;
+            home.querySelectorAll('.home-widget-controls').forEach(controls => controls.remove());
+            if(!home.classList.contains('home-edit-mode')) return;
+            const widgets = getHomeWidgets().filter(widget => !widget.hidden);
+            widgets.forEach((widget, index) => {
+                const controls = document.createElement('div');
+                controls.className = 'home-widget-controls';
+                const remove = document.createElement('button');
+                remove.type = 'button';
+                remove.className = 'home-widget-remove';
+                remove.setAttribute('aria-label', `${widget.dataset.homeWidgetTitle} 숨기기`);
+                remove.title = '위젯 숨기기';
+                remove.innerHTML = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+                remove.addEventListener('click', event => {
+                    event.stopPropagation();
+                    widget.hidden = true;
+                    widget.dataset.homeWidgetHidden = 'true';
+                    saveHomeWidgetLayout();
+                    renderHomeWidgetControls();
+                });
+                const order = document.createElement('div');
+                order.className = 'home-widget-order';
+                [['up', '위로 이동', 'M6 14l6-6 6 6'], ['down', '아래로 이동', 'm6 10 6 6 6-6']].forEach(([direction, label, path]) => {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'home-widget-move';
+                    button.setAttribute('aria-label', label);
+                    button.title = label;
+                    button.disabled = direction === 'up' ? index === 0 : index === widgets.length - 1;
+                    button.innerHTML = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="${path}"/></svg>`;
+                    button.addEventListener('click', event => {
+                        event.stopPropagation();
+                        const next = widgets[index + (direction === 'up' ? -1 : 1)];
+                        if(!next) return;
+                        const home = document.getElementById('tab-home');
+                        if(direction === 'up') home.insertBefore(widget, next);
+                        else home.insertBefore(next, widget);
+                        saveHomeWidgetLayout();
+                        renderHomeWidgetControls();
+                    });
+                    order.appendChild(button);
+                });
+                controls.append(remove, order);
+                widget.appendChild(controls);
+            });
+        }
         function triggerAnimations(tabId) {
             const tab = document.getElementById('tab-' + tabId);
             tab.querySelectorAll('.anim-box, .anim-text').forEach(el => {
@@ -909,25 +1240,54 @@
 
         function editAllergySetting() {
             const userData = JSON.parse(localStorage.getItem('userConfig'));
-            const current = (userData.allergies || []).join(', ');
-            showCustomModal({
-                title: "알러지 정보 설정",
-                message: "알러지 번호를 쉼표(,)로 구분하여 입력하세요.\n(예: 1, 2, 5)\n\n1.난류 2.우유 3.메밀 4.땅콩 5.대두 6.밀 7.고등어 8.게 9.새우 10.돼지고기 11.복숭아 12.토마토 13.아황산류 14.호두 15.닭고기 16.쇠고기 17.오징어 18.조개류 19.잣",
-                inputs: [{ placeholder: "번호 입력 (쉼표로 구분)", value: current }],
-                showCancel: true,
-                onConfirm: async (vals) => {
-                    const input = vals[0].trim();
-                    let newAllergies = [];
-                    if(input) {
-                        newAllergies = input.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n) && n >= 1 && n <= 19);
-                    }
-                    userData.allergies = newAllergies;
-                    localStorage.setItem('userConfig', JSON.stringify(userData));
-                    applyUserData(userData);
-                    await fetchMeal(); // 바뀐 설정으로 다시 요약 계산 및 렌더링
-                    updateBrief();
-                }
-            });
+            const userAllergies = userData.allergies || [];
+            
+            const list = document.getElementById('allergy-checkbox-list');
+            let html = '';
+            for (let i = 1; i <= 19; i++) {
+                const isChecked = userAllergies.includes(i) ? 'checked' : '';
+                html += `
+                    <label class="flex items-center gap-2 text-sm cursor-pointer hover:bg-white/5 p-1 rounded transition text-white">
+                        <input type="checkbox" value="${i}" class="allergy-cb w-4 h-4 accent-blue-500" ${isChecked}>
+                        <span>${i}. ${ALLERGY_INFO[i]}</span>
+                    </label>
+                `;
+            }
+            list.innerHTML = html;
+
+            const overlay = document.getElementById('allergy-modal-overlay');
+            const box = document.getElementById('allergy-modal-box');
+            overlay.classList.remove('hidden');
+            setTimeout(() => {
+                overlay.classList.remove('opacity-0');
+                box.classList.remove('scale-95');
+                box.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeAllergyModal() {
+            const overlay = document.getElementById('allergy-modal-overlay');
+            const box = document.getElementById('allergy-modal-box');
+            overlay.classList.add('opacity-0');
+            box.classList.remove('scale-100');
+            box.classList.add('scale-95');
+            setTimeout(() => overlay.classList.add('hidden'), 300);
+        }
+
+        async function saveAllergyModal() {
+            const userData = JSON.parse(localStorage.getItem('userConfig'));
+            const checkboxes = document.querySelectorAll('.allergy-cb:checked');
+            let newAllergies = [];
+            checkboxes.forEach(cb => newAllergies.push(parseInt(cb.value)));
+            
+            userData.allergies = newAllergies;
+            localStorage.setItem('userConfig', JSON.stringify(userData));
+            applyUserData(userData);
+            
+            closeAllergyModal();
+            
+            await fetchMeal(); 
+            updateBrief();
         }
 
         function showAllergyInfo() {
@@ -1141,7 +1501,7 @@
             if(!pin) {
                 showCustomModal({
                     title: "비밀번호 설정", 
-                    message: "모바일 학생증 접속을 위한 비밀번호를 설정해주세요.\n(최대 15자리 문자/숫자)",
+                    message: "접속을 위한 비밀번호를 설정해주세요.\n(최대 15자리 문자/숫자)",
                     inputs: [{ placeholder: "최대 15자리 입력", type: "password" }], 
                     showCancel: true,
                     onConfirm: (v) => {
@@ -2050,7 +2410,7 @@
             if(!title) { showCustomModal({message: '내용을 입력해주세요.'}); return; }
             
             const dateStr = formatDate(selectedModalDate);
-            if(endDateStr < dateStr) { showCustomModal({message: '종료 날짜는 시작 날짜보다 빠를 수 없습니다.'}); return; }
+            if(endDateStr < dateStr) { showCustomModal({message: '종료 날짜는 시작 날짜보다 빠를 수 정 없습니다.'}); return; }
             if(dateStr === endDateStr && start >= end) { showCustomModal({message: '종료 시간은 시작 시간보다 늦어야 합니다.'}); return; }
             
             if(editId) {
