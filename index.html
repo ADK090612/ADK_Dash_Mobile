@@ -169,6 +169,7 @@
         }
         .cal-month-section { scroll-snap-align: center; margin-bottom: 2rem; min-height: 300px; padding-top: 10px; }
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+        .cal-days-grid { column-gap: 0; }
         .cal-day { padding: 8px 0; font-size: 0.875rem; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; transition: all 0.2s; min-height: 60px; position: relative; }
         .cal-day:not(.other-month) { cursor: pointer; }
         .cal-day:not(.other-month):hover { background: rgba(255,255,255,0.1); }
@@ -185,13 +186,19 @@
             cursor: pointer; position: relative; height: 18px; line-height: 14px; text-align: left;
             z-index: 5;
         }
-        .cal-pill.neis {
-            background: rgba(16, 185, 129, 0.8); /* 학사일정은 초록색으로 구분 */
-        }
+        .cal-pill.neis { background: rgba(16, 185, 129, 0.8); /* 학사일정 기본색 */ }
+        .cal-pill.calendar-color-green { background: rgba(16, 155, 105, 0.82); }
+        .cal-pill.calendar-color-blue { background: rgba(55, 105, 220, 0.86); }
+        .cal-pill.calendar-color-purple { background: rgba(145, 83, 205, 0.84); }
+        .cal-pill.calendar-color-amber { background: rgba(197, 128, 36, 0.88); }
+        .cal-pill-more { border-radius: 9999px; text-align: center; font-weight: 600; color: rgba(255,255,255,0.92); background: rgba(255,255,255,0.16); pointer-events: none; }
+        :root[data-theme="light"] .cal-pill-more { color: rgba(32,43,61,0.8); background: rgba(45,60,82,0.1); }
+        .cal-day.has-multiple-events { min-height: 68px; }
+        .cal-day.has-overflow-events { min-height: 88px; }
         .cal-pill.single { border-radius: 9999px; width: 90%; margin: 0 auto; }
-        .cal-pill.start { border-radius: 9999px 0 0 9999px; width: 100%; margin-left: 5%; padding-left: 8px; }
-        .cal-pill.mid { border-radius: 0; width: 100%; padding-left: 4px; border-left: 1px solid rgba(255,255,255,0.1); border-right: 1px solid rgba(255,255,255,0.1); }
-        .cal-pill.end { border-radius: 0 9999px 9999px 0; width: 95%; padding-left: 4px; border-left: 1px solid rgba(255,255,255,0.1); }
+        .cal-pill.start { border-radius: 9999px 0 0 9999px; width: 100%; margin-left: 0; padding-left: 8px; }
+        .cal-pill.mid { border-radius: 0; width: 100%; padding-left: 4px; border-left: 0; border-right: 0; }
+        .cal-pill.end { border-radius: 0 9999px 9999px 0; width: 100%; padding-left: 4px; border-left: 0; }
 
         /* 교시 아이템 드래그 앤 드롭 애니메이션 */
         .period-item { transition: transform 0.2s, opacity 0.2s; }
@@ -2320,7 +2327,7 @@
         function generateMonthHTML(y, m, id) {
             let html = `<div id="${id}" class="cal-month-section" data-year="${y}" data-month="${m}">`;
             html += `<div class="text-center font-bold text-xl mb-4 text-white/80">${y}년 ${m + 1}월</div>`;
-            html += `<div class="cal-grid text-sm mb-2 font-semibold"><div class="text-red-400">일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div class="text-blue-400">토</div></div><div class="cal-grid">`;
+            html += `<div class="cal-grid text-sm mb-2 font-semibold"><div class="text-red-400">일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div class="text-blue-400">토</div></div><div class="cal-grid cal-days-grid">`;
 
             let firstDay = new Date(y, m, 1).getDay();
             let daysInMonth = new Date(y, m + 1, 0).getDate();
@@ -2366,41 +2373,77 @@
 
         function renderCalendarSchedules() {
             document.querySelectorAll('.cal-event-container').forEach(el => el.innerHTML = '');
-            
-            const allSchedules = [...neisSchedulesData, ...userCustomSchedules];
 
-            allSchedules.forEach(s => {
-                let startD = new Date(s.date);
-                let endD = new Date(s.endDate || s.date);
-                
-                for (let d = new Date(startD); d <= endD; d.setDate(d.getDate() + 1)) {
-                    let dStr = formatDate(d);
-                    const dayEl = document.querySelector(`.cal-day[data-date="${dStr}"]`);
-                    
-                    if (dayEl) {
-                        const container = dayEl.querySelector('.cal-event-container');
-                        const isStart = d.getTime() === startD.getTime();
-                        const isEnd = d.getTime() === endD.getTime();
-                        const isSingle = isStart && isEnd;
-                        
-                        let pillClass = "cal-pill";
-                        if(s.isNeis) pillClass += " neis"; // 학사일정 구분
-                        
-                        if(isSingle) pillClass += " single";
-                        else if(isStart) pillClass += " start";
-                        else if(isEnd) pillClass += " end";
-                        else pillClass += " mid";
-                        
-                        let clickAction = s.isNeis 
-                            ? `event.stopPropagation(); showCustomModal({title: '학사일정', message: '${s.title}'})` 
-                            : `event.stopPropagation(); openScheduleModal(new Date('${dStr}'), '${s.id}')`;
+            const allSchedules = [...neisSchedulesData, ...userCustomSchedules].map((schedule, index) => ({
+                ...schedule,
+                endDate: schedule.endDate || schedule.date,
+                originalIndex: index
+            }));
+            const dateNumber = (dateStr) => {
+                const [year, month, day] = dateStr.split('-').map(Number);
+                return Date.UTC(year, month - 1, day);
+            };
+            const durationInDays = schedule => (dateNumber(schedule.endDate) - dateNumber(schedule.date)) / 86400000 + 1;
+            const sortedSchedules = allSchedules.sort((a, b) =>
+                durationInDays(b) - durationInDays(a) ||
+                a.date.localeCompare(b.date) ||
+                a.originalIndex - b.originalIndex
+            );
+            const calendarColors = ['green', 'blue', 'purple', 'amber'];
+            const assignedSchedules = [];
+            sortedSchedules.forEach(schedule => {
+                const overlappingColors = new Set(assignedSchedules
+                    .filter(other => schedule.date <= other.endDate && other.date <= schedule.endDate)
+                    .map(other => other.colorIndex));
+                let colorIndex = calendarColors.findIndex((_, index) => !overlappingColors.has(index));
+                if(colorIndex < 0) colorIndex = assignedSchedules.length % calendarColors.length;
+                schedule.colorIndex = colorIndex;
+                assignedSchedules.push(schedule);
+            });
 
-                        container.innerHTML += `<div class="${pillClass}" onclick="${clickAction}">${isStart ? s.title : '&nbsp;'}</div>`;
-                    }
+            const entriesByDate = new Map();
+            sortedSchedules.forEach(schedule => {
+                const cursor = new Date(`${schedule.date}T00:00:00`);
+                const lastDate = new Date(`${schedule.endDate}T00:00:00`);
+                for(; cursor <= lastDate; cursor.setDate(cursor.getDate() + 1)) {
+                    const dateStr = formatDate(cursor);
+                    const dayEl = document.querySelector(`.cal-day[data-date="${dateStr}"]`);
+                    if(!dayEl) continue;
+                    if(!entriesByDate.has(dateStr)) entriesByDate.set(dateStr, []);
+                    entriesByDate.get(dateStr).push({ schedule, dateStr });
+                }
+            });
+
+            entriesByDate.forEach((entries, dateStr) => {
+                const dayEl = document.querySelector(`.cal-day[data-date="${dateStr}"]`);
+                const container = dayEl?.querySelector('.cal-event-container');
+                if(!container) return;
+                dayEl.classList.toggle('has-multiple-events', entries.length > 1);
+                dayEl.classList.toggle('has-overflow-events', entries.length > 2);
+
+                entries.slice(0, 2).forEach(({ schedule }) => {
+                    const isStart = dateStr === schedule.date;
+                    const isEnd = dateStr === schedule.endDate;
+                    const isSingle = isStart && isEnd;
+                    let pillClass = `cal-pill calendar-color-${calendarColors[schedule.colorIndex]}`;
+                    if(schedule.isNeis) pillClass += ' neis';
+                    if(isSingle) pillClass += ' single';
+                    else if(isStart) pillClass += ' start';
+                    else if(isEnd) pillClass += ' end';
+                    else pillClass += ' mid';
+
+                    const clickAction = schedule.isNeis
+                        ? `event.stopPropagation(); showCustomModal({title: '학사일정', message: '${schedule.title}'})`
+                        : `event.stopPropagation(); openScheduleModal(new Date('${dateStr}'), '${schedule.id}')`;
+                    container.innerHTML += `<div class="${pillClass}" onclick="${clickAction}">${isStart ? schedule.title : '&nbsp;'}</div>`;
+                });
+
+                const overflowCount = entries.length - 2;
+                if(overflowCount > 0) {
+                    container.innerHTML += `<div class="cal-pill cal-pill-more single" aria-label="추가 일정 ${overflowCount}개">+${overflowCount}</div>`;
                 }
             });
         }
-
         function handleDayClick(dateStr) { openScheduleModal(new Date(dateStr)); }
 
         // --- 모달 관리 ---
