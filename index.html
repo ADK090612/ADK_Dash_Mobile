@@ -72,11 +72,11 @@
         :root[data-theme="light"] .bezel-gradient-bottom { background: linear-gradient(to top, rgba(237,241,247,0.92), transparent); }
         :root[data-theme="light"] [class~="text-white"] { color: #202b3d !important; }
         :root[data-theme="light"] [class~="text-white/90"] { color: rgba(32,43,61,0.92) !important; }
-        :root[data-theme="light"] [class~="text-white/80"] { color: rgba(32,43,61,0.84) !important; }
-        :root[data-theme="light"] [class~="text-white/70"] { color: rgba(32,43,61,0.72) !important; }
-        :root[data-theme="light"] [class~="text-white/60"] { color: rgba(32,43,61,0.62) !important; }
-        :root[data-theme="light"] [class~="text-white/50"] { color: rgba(32,43,61,0.52) !important; }
-        :root[data-theme="light"] [class~="text-white/40"] { color: rgba(32,43,61,0.42) !important; }
+        :root[data-theme="light"] [class~="text-white/80"] { color: rgba(32,43,61,0.9) !important; }
+        :root[data-theme="light"] [class~="text-white/70"] { color: rgba(32,43,61,0.84) !important; }
+        :root[data-theme="light"] [class~="text-white/60"] { color: rgba(32,43,61,0.78) !important; }
+        :root[data-theme="light"] [class~="text-white/50"] { color: rgba(32,43,61,0.72) !important; }
+        :root[data-theme="light"] [class~="text-white/40"] { color: rgba(32,43,61,0.64) !important; }
         :root[data-theme="light"] [class*="bg-white/"] { background-color: rgba(40,55,75,0.055); }
         :root[data-theme="light"] [class*="border-white/"] { border-color: rgba(45,60,82,0.13); }
         :root[data-theme="light"] [class~="bg-black/10"] { background-color: rgba(35,48,67,0.035); }
@@ -170,6 +170,7 @@
         .timeline-meal-menu-title { display: block; color: rgba(255,255,255,.62); font-size: 10px; font-weight: 700; letter-spacing: .02em; margin-bottom: 2px; }
         .timeline-meal-menu-item { display: block; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 11px; line-height: 15px; }
         .timeline-meal-empty { color: rgba(255,255,255,.58); }
+        #timetable-content.timetable-subject-edit-mode > [data-period] { outline: 1px dashed rgba(148,163,184,.8); outline-offset: 1px; background-color: rgba(148,163,184,.2); }
         :root[data-theme="light"] .timeline-meal-main { color: #263247; background: rgba(34,197,94,.14); border-color: rgba(45,60,82,.2); }
         :root[data-theme="light"] .timeline-meal-menu { background: rgba(32,43,61,.86); color: rgba(255,255,255,.94); border-color: rgba(255,255,255,.22); }
         
@@ -253,6 +254,11 @@
         .home-widget-drop-placeholder { box-sizing: border-box; min-height: 76px; border: 1px dashed rgba(203,213,225,.72); border-radius: 24px; background: rgba(148,163,184,.16); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); box-shadow: inset 0 0 24px rgba(203,213,225,.08), 0 6px 22px rgba(0,0,0,.1); pointer-events: none; }
         :root[data-theme="light"] .home-widget-drag-preview { color: #263247; background: rgba(195,205,219,.68); border-color: rgba(76,91,111,.32); }
         :root[data-theme="light"] .home-widget-drop-placeholder { background: rgba(145,159,180,.2); border-color: rgba(76,91,111,.55); }
+        .assessment-due-banner { border-color: rgba(251,191,36,.3); background: rgba(245,158,11,.12); transition: transform .2s, background-color .2s; }
+        .assessment-due-banner:hover { transform: translateY(-1px); background: rgba(245,158,11,.18); }
+        .assessment-due-icon { width: 26px; height: 26px; display: grid; place-items: center; flex: 0 0 26px; border-radius: 9999px; color: #fff7ed; background: rgba(217,119,6,.7); font-weight: 800; }
+        :root[data-theme="light"] .assessment-due-banner { color: #54350a; border-color: rgba(180,83,9,.28); background: rgba(245,158,11,.13); }
+        :root[data-theme="light"] .assessment-due-icon { color: #fff; background: #a85a08; }
         .home-widget-remove { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; background: rgba(0,0,0,0.28); border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); color: rgba(255,255,255,0.9); transition: background 0.2s, transform 0.2s; }
         .home-widget-remove { color: #fecaca; background: rgba(127,29,29,0.35); }
         .home-widget-order { display: flex; gap: 6px; }
@@ -424,7 +430,7 @@
         <div id="tab-timetable" class="tab-content hidden flex flex-col h-full overflow-hidden">
             <div class="flex flex-wrap justify-between items-center gap-y-2 mb-4 shrink-0 anim-box">
                 <h2 class="text-2xl font-bold drop-shadow-md anim-text">일일 스케줄</h2>
-<div class="flex gap-2 shrink-0"><button onclick="copyTimetableText()" class="action-button rounded-full px-3 py-2 text-xs font-semibold" aria-label="시간표 텍스트 복사" title="시간표 텍스트 복사">복사</button><button onclick="saveTimetableImage()" class="action-button rounded-full px-3 py-2 text-xs font-semibold">이미지 저장</button><button onclick="openScheduleModal(new Date())" class="action-button rounded-full px-4 py-2 text-sm font-semibold">추가</button></div>
+<div class="flex flex-wrap justify-end gap-2 shrink-0"><button onclick="toggleTimetableEditMode()" id="timetable-edit-toggle" class="action-button rounded-full px-3 py-2 text-xs font-semibold" aria-pressed="false">과목 수정</button><button onclick="copyTimetableText()" class="action-button rounded-full px-3 py-2 text-xs font-semibold" aria-label="시간표 텍스트 복사" title="시간표 텍스트 복사">복사</button><button onclick="saveTimetableImage()" class="action-button rounded-full px-3 py-2 text-xs font-semibold">이미지 저장</button><button onclick="shareTimetableImage()" class="action-button rounded-full px-3 py-2 text-xs font-semibold">공유</button><button onclick="openScheduleModal(new Date())" class="action-button rounded-full px-4 py-2 text-sm font-semibold">추가</button></div>
             </div>
             
             <div class="liquid-glass card p-2 flex-1 overflow-hidden anim-box d-1 mb-8">
@@ -798,11 +804,50 @@
         function localDayKey(d=new Date()){return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");}
         let assessmentTasks=safeStoredArray("assessmentTasks",x=>x&&typeof x.id==="string"&&typeof x.title==="string"&&x.title.length<=160&&isValidISODate(x.dueDate)).map(x=>({...x,subject:typeof x.subject==="string"?x.subject.slice(0,100):"",note:typeof x.note==="string"?x.note.slice(0,1000):"",done:!!x.done}));
         function renderAssessmentTasks(){const ul=document.getElementById("assessment-task-list");if(!ul)return;ul.replaceChildren();const today=localDayKey();assessmentTasks.sort((a,b)=>Number(!!a.done)-Number(!!b.done)||a.dueDate.localeCompare(b.dueDate));if(!assessmentTasks.length){const e=document.createElement("li");e.className="text-sm text-white/50";e.textContent="등록된 수행평가가 없습니다.";ul.append(e);return;}assessmentTasks.forEach(t=>{const li=document.createElement("li");li.className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2";const cb=document.createElement("input");cb.type="checkbox";cb.checked=!!t.done;cb.setAttribute("aria-label",t.title+" 완료");cb.addEventListener("change",()=>{t.done=cb.checked;persistAssessmentTasks();});const b=document.createElement("button");b.type="button";b.className="min-w-0 flex-1 text-left";b.addEventListener("click",()=>openAssessmentModal(t.id));const name=document.createElement("span");name.className="block truncate text-sm font-semibold";name.textContent=t.title;const meta=document.createElement("span");meta.className="block text-xs text-white/50";meta.textContent=(t.subject?t.subject+" · ":"")+t.dueDate+(!t.done&&t.dueDate<today?" · 마감 지남":"");b.append(name,meta);if(t.note){const note=document.createElement("span");note.className="block text-xs text-white/70 mt-1 line-clamp-2";note.textContent=t.note;b.appendChild(note);}const del=document.createElement("button");del.type="button";del.textContent="삭제";del.className="text-xs text-white/50";del.addEventListener("click",()=>{assessmentTasks=assessmentTasks.filter(x=>x.id!==t.id);persistAssessmentTasks();});li.append(cb,b,del);ul.append(li);});}
-        function persistAssessmentTasks(){try{localStorage.setItem("assessmentTasks",JSON.stringify(assessmentTasks));renderAssessmentTasks();return true;}catch(e){showCustomModal({message:"저장 공간이 부족해 저장하지 못했습니다."});return false;}}
+        function persistAssessmentTasks(){try{localStorage.setItem("assessmentTasks",JSON.stringify(assessmentTasks));renderAssessmentTasks();renderExamDdayWidget();return true;}catch(e){showCustomModal({message:"저장 공간이 부족해 저장하지 못했습니다."});return false;}}
         function openAssessmentModal(id=""){const t=assessmentTasks.find(x=>x.id===id);document.getElementById("assessment-form").reset();document.getElementById("assessment-edit-id").value=t?t.id:"";document.getElementById("assessment-title").value=t?t.title:"";document.getElementById("assessment-subject").value=t?(t.subject||""):"";document.getElementById("assessment-note").value=t?(t.note||""):"";document.getElementById("assessment-due").value=t?t.dueDate:localDayKey();document.getElementById("assessment-heading-modal").textContent=t?"수행평가 수정":"수행평가 추가";const m=document.getElementById("assessment-modal");m.classList.remove("hidden");requestAnimationFrame(()=>m.classList.remove("opacity-0"));}
         function closeAssessmentModal(){const m=document.getElementById("assessment-modal");m.classList.add("opacity-0");setTimeout(()=>m.classList.add("hidden"),300);}
         function saveAssessmentTask(e){e.preventDefault();const title=document.getElementById("assessment-title").value.trim().slice(0,160),subject=document.getElementById("assessment-subject").value.trim().slice(0,100),note=document.getElementById("assessment-note").value.trim().slice(0,1000),dueDate=document.getElementById("assessment-due").value,id=document.getElementById("assessment-edit-id").value;if(!title||!isValidISODate(dueDate)){showCustomModal({message:"내용과 올바른 마감일을 입력해주세요."});return;}const t={id:id||("task_"+Date.now()),title,subject,note,dueDate,done:!!assessmentTasks.find(x=>x.id===id)?.done};if(id)assessmentTasks=assessmentTasks.map(x=>x.id===id?t:x);else assessmentTasks.push(t);if(persistAssessmentTasks()){closeAssessmentModal();checkAssessmentNotifications();}}
-        function renderExamDdayWidget(){const host=document.getElementById("home-dday-list");if(!host)return;host.replaceChildren();const today=localDayKey();const all=[...(Array.isArray(neisSchedulesData)?neisSchedulesData:[]),...(Array.isArray(userCustomSchedules)?userCustomSchedules:[])].filter(s=>s&&/시험|고사|모의고사|수능|평가/.test(s.title||"")).filter(s=>(s.endDate||s.date)>=today).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,3);if(!all.length){const e=document.createElement("div");e.className="text-xs text-white/50";e.textContent="시험 일정이 등록되면 D-Day를 표시해요.";host.append(e);return;}all.forEach(s=>{const d=Math.round((new Date(s.date+"T12:00:00")-new Date(today+"T12:00:00"))/86400000);const row=document.createElement("div");row.className="liquid-glass pill flex justify-between px-3 py-2 text-sm";const title=document.createElement("span");title.textContent=s.title;const badge=document.createElement("b");badge.className="text-emerald-200";badge.textContent=d===0?"D-DAY":s.date<today?"진행 중":"D-"+d;row.append(title,badge);host.append(row);});}
+        function renderExamDdayWidget() {
+            const host=document.getElementById('home-dday-list'); if(!host) return;
+            host.replaceChildren(); const today=localDayKey(); const tomorrowDate=new Date(); tomorrowDate.setDate(tomorrowDate.getDate()+1); const tomorrow=localDayKey(tomorrowDate);
+            const urgent=assessmentTasks.filter(task=>!task.done&&task.dueDate<=tomorrow).sort((a,b)=>Number(a.dueDate<today)-Number(b.dueDate<today)||a.dueDate.localeCompare(b.dueDate)).slice(0,3);
+            urgent.forEach(task=>{
+                const overdue=task.dueDate<today; const dueToday=task.dueDate===today;
+                const banner=document.createElement('button'); banner.type='button'; banner.className='assessment-due-banner liquid-glass card w-full flex items-center gap-3 px-3 py-2 text-left';
+                const icon=document.createElement('span'); icon.className='assessment-due-icon'; icon.textContent=overdue?'!':'D';
+                const info=document.createElement('span'); info.className='min-w-0 flex-1';
+                const label=document.createElement('b'); label.className='block text-xs'; label.textContent=overdue?'마감 지난 수행평가':dueToday?'오늘 마감':'내일 마감';
+                const title=document.createElement('span'); title.className='block truncate text-sm'; title.textContent=task.title; info.append(label,title);
+                const arrow=document.createElement('span'); arrow.className='text-sm opacity-70'; arrow.textContent='›'; banner.append(icon,info,arrow);
+                banner.addEventListener('click',()=>{const nav=[...document.querySelectorAll('.bottom-nav .nav-item')][2];if(nav){switchTab('calendar',nav);setTimeout(()=>document.getElementById('assessment-task-list')?.scrollIntoView({behavior:'smooth',block:'center'}),120);}}); host.appendChild(banner);
+            });
+            const exams=[...(Array.isArray(neisSchedulesData)?neisSchedulesData:[]),...(Array.isArray(userCustomSchedules)?userCustomSchedules:[])].filter(item=>item&&/시험|고사|모의고사|수능|평가/.test(item.title||'')).filter(item=>(item.endDate||item.date)>=today).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,3);
+            if(!exams.length&&!urgent.length){const empty=document.createElement('div');empty.className='text-xs text-white/50';empty.textContent='시험 일정이나 임박한 수행평가가 없습니다.';host.append(empty);return;}
+            exams.forEach(item=>{const days=Math.round((new Date(item.date+'T12:00:00')-new Date(today+'T12:00:00'))/86400000);const row=document.createElement('div');row.className='liquid-glass pill flex justify-between px-3 py-2 text-sm';const title=document.createElement('span');title.textContent=item.title;const badge=document.createElement('b');badge.className='text-emerald-200';badge.textContent=days===0?'D-DAY':item.date<today?'진행 중':'D-'+days;row.append(title,badge);host.append(row);});
+        }
+        let timetableEditMode = false;
+        function readTimetableOverrides() { try { const value=JSON.parse(localStorage.getItem('customTimetableOverrides')||'{}'); return value&&typeof value==='object'&&!Array.isArray(value)?value:{}; } catch (_) { return {}; } }
+        function timetableOverrideKey(period, config=null) { let user=config; if(!user) { try { user=JSON.parse(localStorage.getItem('userConfig')||'null'); } catch (_) {} } return `${user?.regionCode||DEFAULT_REGION_CODE}:${user?.schoolCode||DEFAULT_SCHOOL_CODE}:${user?.grade||''}:${user?.class||''}:${new Date().getDay()}:${period}`; }
+        function toggleTimetableEditMode() {
+            timetableEditMode=!timetableEditMode;
+            const button=document.getElementById('timetable-edit-toggle'); const content=document.getElementById('timetable-content');
+            button.textContent=timetableEditMode?'수정 완료':'과목 수정'; button.setAttribute('aria-pressed',String(timetableEditMode));
+            content.classList.toggle('timetable-subject-edit-mode',timetableEditMode);
+        }
+        function handleTimetableSubjectClick(period, officialName) {
+            const key=timetableOverrideKey(period); const overrides=readTimetableOverrides(); const savedOverride=typeof overrides[key]==='string'?overrides[key].slice(0,80):'';
+            if(timetableEditMode) {
+                showCustomModal({title:'요일별 과목 수정',message:'이 요일의 해당 교시에 매주 적용할 과목명을 입력하세요. 비우고 저장하면 NEIS 원래 과목명으로 되돌립니다.',inputs:[{value:savedOverride||officialName,placeholder:'과목명'}],showCancel:true,onConfirm:values=>{
+                    const value=String(values[0]||'').trim().slice(0,80); const updated=readTimetableOverrides();
+                    if(value && value!==officialName) updated[key]=value; else delete updated[key];
+                    try { localStorage.setItem('customTimetableOverrides',JSON.stringify(updated)); }
+                    catch(error) { showCustomModal({message:'저장 공간이 부족해 과목명을 저장하지 못했습니다.'}); return false; }
+                    fetchNeisTimetable();
+                }});
+            } else openSubjectMemo(savedOverride||officialName);
+        }
+
         async function copyTimetableText() {
             let entries = Array.isArray(dailyTimetableSchedules) ? [...dailyTimetableSchedules] : [];
             if(!entries.length) entries = Array.from(document.querySelectorAll('#timetable-content > div')).map((row,index)=>({sh:index+1,sm:0,title:row.textContent.trim()})).filter(item=>item.title);
@@ -816,7 +861,7 @@
                 const copied = document.execCommand('copy'); area.remove(); showCustomModal({message:copied?'시간표와 급식 메뉴를 복사했습니다.':'클립보드에 복사하지 못했습니다.'});
             }
         }
-        async function saveTimetableImage() {
+        async function createTimetableImageBlob() {
             let entries = Array.isArray(dailyTimetableSchedules) ? [...dailyTimetableSchedules] : [];
             if (!entries.length) {
                 entries = Array.from(document.querySelectorAll("#timetable-content > div")).map((el, i) => {
@@ -824,7 +869,7 @@
                     return spans.length >= 2 ? { label: spans[0].textContent + " · ", title: spans[1].textContent, _order: i } : null;
                 }).filter(Boolean);
             }
-            if (!entries.length && !(Array.isArray(todayMealMenuItems) && todayMealMenuItems.length)) { showCustomModal({ message: "저장할 시간표가 없습니다." }); return; }
+            if (!entries.length && !(Array.isArray(todayMealMenuItems) && todayMealMenuItems.length)) return null;
             entries = entries.map(entry => ({
                 ...entry,
                 isMeal: String(entry.title || "").startsWith("🍱"),
@@ -836,7 +881,7 @@
             const canvas = document.createElement("canvas");
             const width = 1080;
             const ctx = canvas.getContext("2d");
-            if (!ctx) { showCustomModal({ message: "이미지 저장을 지원하는 브라우저가 아닙니다." }); return; }
+            if (!ctx) return null;
             if (document.fonts && document.fonts.ready) await Promise.race([document.fonts.ready, new Promise(resolve => setTimeout(resolve, 1000))]);
             const menuFont = '17px "Gowun Dodum", sans-serif';
             const lineHeight = 23;
@@ -889,18 +934,32 @@
                 }
                 y += row.height;
             });
-            canvas.toBlob(blob => {
-                if (!blob) { showCustomModal({ message: "시간표 이미지를 만들지 못했습니다." }); return; }
-                const url = URL.createObjectURL(blob);
-                const anchor = document.createElement("a");
-                anchor.href = url; anchor.download = "ADK-시간표-" + localDayKey() + ".png";
-                document.body.append(anchor); anchor.click(); anchor.remove();
-                setTimeout(() => URL.revokeObjectURL(url), 1200);
-            }, "image/png");
+            return new Promise(resolve => canvas.toBlob(blob => resolve(blob || null), "image/png"));
+        }
+        async function saveTimetableImage() {
+            const blob=await createTimetableImageBlob();
+            if(!blob) { showCustomModal({message:'시간표 이미지가 없어 저장하지 못했습니다.'}); return; }
+            const url=URL.createObjectURL(blob); const anchor=document.createElement('a');
+            anchor.href=url; anchor.download='ADK-시간표-'+localDayKey()+'.png'; document.body.append(anchor); anchor.click(); anchor.remove();
+            setTimeout(()=>URL.revokeObjectURL(url),1200);
+        }
+        async function shareTimetableImage() {
+            if(!navigator.share || !window.File) { showCustomModal({message:'이 브라우저에서는 이미지 바로 공유를 지원하지 않습니다. 이미지 저장 버튼을 눌러 저장한 뒤 공유 메뉴에서 선택해주세요.'}); return; }
+            const blob=await createTimetableImageBlob();
+            if(!blob) { showCustomModal({message:'공유할 시간표 이미지가 없습니다.'}); return; }
+            const file=new File([blob],'ADK-시간표-'+localDayKey()+'.png',{type:'image/png'});
+            try {
+                if(navigator.canShare && !navigator.canShare({files:[file]})) { showCustomModal({message:'이 브라우저의 공유 메뉴는 이미지 파일을 지원하지 않습니다. 이미지 저장 버튼을 눌러 저장한 뒤 공유해주세요.'}); return; }
+                await navigator.share({files:[file],title:'오늘의 시간표',text:'오늘의 시간표와 급식 메뉴'});
+            } catch(error) {
+                if(error?.name==='AbortError') return;
+                console.warn('시간표 공유 실패',error); showCustomModal({message:'바로 공유하지 못했습니다. 이미지 저장 후 공유 메뉴에서 선택해주세요.'});
+            }
         }
         function registerPwa(){if("serviceWorker"in navigator&&(location.protocol==="https:"||(location.hostname==="localhost"||location.hostname==="127.0.0.1")))navigator.serviceWorker.register("./service-worker.js").catch(console.warn);}
         function readDataCache(key,maxAge){try{const v=JSON.parse(localStorage.getItem(key)||"null");return v&&v.savedAt&&Date.now()-v.savedAt<=maxAge?v:null;}catch(_){return null;}}
-        async function fetchCachedJson(url,key,validate,maxAge){try{const r=await fetch(url);if(!r.ok)throw Error("HTTP "+r.status);const data=await r.json();if(!validate(data))throw Error("유효하지 않은 API 응답");const v={savedAt:Date.now(),data};try{localStorage.setItem(key,JSON.stringify(v));}catch(e){console.warn("오프라인 저장 실패",e);}return{data,offline:false,savedAt:v.savedAt};}catch(e){const v=readDataCache(key,maxAge);if(v)return{data:v.data,offline:true,savedAt:v.savedAt};throw e;}}
+        async function fetchCachedJson(url,key,validate,maxAge){try{const r=await fetch(url);if(!r.ok)throw Error("HTTP "+r.status);const data=await r.json();if(data?.RESULT?.CODE && data.RESULT.CODE!=="INFO-200")throw Error(String(data.RESULT.CODE)+": "+String(data.RESULT.MESSAGE||"NEIS 요청 오류"));if(!validate(data))throw Error("API_RESPONSE_INVALID");const v={savedAt:Date.now(),data};try{localStorage.setItem(key,JSON.stringify(v));}catch(e){console.warn("오프라인 저장 실패",e);}return{data,offline:false,savedAt:v.savedAt};}catch(e){const v=readDataCache(key,maxAge);if(v)return{data:v.data,offline:true,savedAt:v.savedAt};throw e;}}
+        function neisUserError(error,resource){const detail=String(error?.message||"");if(/ERROR-(?:300|290)|invalid|school|기관코드|학교코드/i.test(detail))return `학교 또는 지역 코드가 확인되지 않아 ${resource}를 가져오지 못했습니다. 설정에서 학교를 다시 검색해 저장해주세요.`;if(detail.includes('API_RESPONSE_INVALID')||detail.includes('Unexpected token'))return `NEIS ${resource} 응답 형식이 예상과 달라 표시하지 못했습니다. 잠시 뒤 다시 시도해주세요.`;if(/HTTP 5|Failed to fetch|NetworkError|Load failed/i.test(detail))return `${resource} 서버 또는 네트워크에 연결하지 못했습니다. 연결을 확인한 뒤 다시 시도해주세요.`;return `${resource} 정보를 가져오지 못했습니다. 학교 설정과 네트워크 연결을 확인한 뒤 다시 시도해주세요.`;}
         function offlineNote(result){if(!result||!result.offline)return "";const d=new Date(result.savedAt);return '<div class="text-[11px] text-amber-200/75 mt-2">오프라인 저장 정보 · '+(d.getMonth()+1)+'/'+d.getDate()+'</div>';}
         let viewportResizeFrame = 0;
         function updateAppViewportHeight() {
@@ -924,7 +983,7 @@
             if(!window.isSecureContext) { showCustomModal({message:'브라우저 보안 연결(HTTPS)에서 알림을 켤 수 있습니다.'}); return; }
             let permission = Notification.permission;
             if(permission === 'default') permission = await Notification.requestPermission();
-            if(permission !== 'granted') { showCustomModal({message:'브라우저 설정에서 알림 권한을 허용해주세요.'}); return; }
+            if(permission !== 'granted') { showCustomModal({title:'알림 권한이 꺼져 있어요',message:'주소창 왼쪽의 사이트 정보(자물쇠) 또는 브라우저 사이트 설정에서 이 페이지의 알림을 허용한 뒤 다시 눌러주세요. 권한이 차단됨으로 고정된 경우 브라우저 설정에서 직접 변경해야 합니다.'}); return; }
             localStorage.setItem('adkAssessmentNotifications','1'); updateAssessmentNotificationButton(); checkAssessmentNotifications();
         }
         function checkAssessmentNotifications() {
@@ -2023,25 +2082,34 @@
             startIdTimer();
         }
 
+        let idDisplayDeadline = 0;
+        function syncIdTimer() {
+            if(!idDisplayDeadline) return;
+            const remaining = Math.max(0, Math.ceil((idDisplayDeadline - Date.now()) / 1000));
+            idTimeRemaining = remaining;
+            const timerText = document.getElementById('id-timer-text');
+            if(timerText) timerText.textContent = remaining + '초';
+            if(remaining <= 0) { closeIdDisplay(); return; }
+            if(!document.hidden && !idDisplayTimer) idDisplayTimer = setInterval(syncIdTimer, 250);
+        }
         function startIdTimer() {
-            clearInterval(idDisplayTimer);
-            idTimeRemaining = 60;
-            document.getElementById('id-timer-text').innerText = idTimeRemaining + "초";
-            
-            idDisplayTimer = setInterval(() => {
-                idTimeRemaining--;
-                document.getElementById('id-timer-text').innerText = idTimeRemaining + "초";
-                if(idTimeRemaining <= 0) closeIdDisplay();
-            }, 1000);
+            clearInterval(idDisplayTimer); idDisplayTimer = null;
+            idDisplayDeadline = Date.now() + 60000;
+            syncIdTimer();
         }
-
+        document.addEventListener('visibilitychange', () => {
+            if(document.hidden) { clearInterval(idDisplayTimer); idDisplayTimer = null; }
+            else syncIdTimer();
+        });
         function extendIdTimer() {
-            idTimeRemaining = 60;
-            document.getElementById('id-timer-text').innerText = idTimeRemaining + "초";
+            idDisplayDeadline = Date.now() + 60000;
+            if(!document.hidden && !idDisplayTimer) idDisplayTimer = setInterval(syncIdTimer, 250);
+            syncIdTimer();
         }
-
         function closeIdDisplay() {
-            clearInterval(idDisplayTimer);
+            clearInterval(idDisplayTimer); idDisplayTimer = null; idDisplayDeadline = 0;
+            const barcode = document.getElementById('barcode-canvas');
+            if(barcode) { const context = barcode.getContext('2d'); if(context) context.clearRect(0,0,barcode.width,barcode.height); }
             const modal = document.getElementById('id-display-modal');
             modal.classList.add('opacity-0');
             setTimeout(() => modal.classList.add('hidden'), 300);
@@ -2134,13 +2202,15 @@
 
                 const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${regionCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_YMD=${ymd}`;
                 
-                const result = await fetchCachedJson(url, "adk_meal_"+regionCode+"_"+schoolCode+"_"+ymd, v=>!!(v&&(v.mealServiceDietInfo||v.RESULT?.CODE==="INFO-200")), 259200000); const data=result.data;
+                const result = await fetchCachedJson(url, "adk_meal_"+regionCode+"_"+schoolCode+"_"+ymd, v=>!!(v&&(v.RESULT?.CODE==="INFO-200"||(Array.isArray(v.mealServiceDietInfo)&&(!v.mealServiceDietInfo[1]||Array.isArray(v.mealServiceDietInfo[1].row))))), 259200000); const data=result.data;
 
                 
                 detectedAllergiesInMeal = [];
 
-                if (data.mealServiceDietInfo && data.mealServiceDietInfo[1] && data.mealServiceDietInfo[1].row) {
-                    const mealStr = data.mealServiceDietInfo[1].row[0].DDISH_NM;
+                if (data.mealServiceDietInfo && data.mealServiceDietInfo[1] && Array.isArray(data.mealServiceDietInfo[1].row) && data.mealServiceDietInfo[1].row.length) {
+                    const mealRow = data.mealServiceDietInfo[1].row[0];
+                    if(!mealRow || typeof mealRow.DDISH_NM !== 'string') throw Error('API_RESPONSE_INVALID');
+                    const mealStr = mealRow.DDISH_NM;
                     
                     const rawItems = mealStr.split('<br/>');
                     let displayHtml = '';
@@ -2204,7 +2274,7 @@
                 }
             } catch(e) {
                 console.error(e);
-                renderApiError('meal-content', '급식 정보를 불러오지 못했습니다. 연결 상태를 확인해주세요.', fetchMeal);
+                renderApiError('meal-content', neisUserError(e,'급식'), fetchMeal);
                 todayMealMenuItems = []; todayMealBriefData = ''; renderTimelineSchedules(new Date());
             }
         }
@@ -2313,25 +2383,27 @@
             const url = `https://open.neis.go.kr/hub/hisTimetable?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${regionCode}&SD_SCHUL_CODE=${schoolCode}&ALL_TI_YMD=${ymd}&GRADE=${config.grade}&CLASS_NM=${config.class}`;
             
             try {
-                const result = await fetchCachedJson(url, "adk_timetable_"+regionCode+"_"+schoolCode+"_"+config.grade+"_"+config.class+"_"+ymd, v=>!!(v&&(v.hisTimetable||v.RESULT?.CODE==="INFO-200")), 1209600000); const data=result.data;
+                const result = await fetchCachedJson(url, "adk_timetable_"+regionCode+"_"+schoolCode+"_"+config.grade+"_"+config.class+"_"+ymd, v=>!!(v&&(v.RESULT?.CODE==="INFO-200"||(Array.isArray(v.hisTimetable)&&(!v.hisTimetable[1]||Array.isArray(v.hisTimetable[1].row))))), 1209600000); const data=result.data;
 
                 const container = document.getElementById('timetable-content');
                 dailyTimetableSchedules = []; 
                 
                 const times = getPeriodTimes();
 
-                if (data.hisTimetable && data.hisTimetable[1] && data.hisTimetable[1].row) {
+                if (data.hisTimetable && data.hisTimetable[1] && Array.isArray(data.hisTimetable[1].row) && data.hisTimetable[1].row.length) {
                     const rows = data.hisTimetable[1].row;
                     let html = '';
                     
+                    const overrides=readTimetableOverrides();
                     rows.forEach(r => {
                         const perioName = r.PERIO + '교시';
-                        const memoArg = JSON.stringify(String(r.ITRT_CNTNT || '')).replace(/&/g, "\\u0026").replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/'/g, "\\u0027");
+                        const officialName=String(r.ITRT_CNTNT||'');
+                        const effectiveName=overrides[timetableOverrideKey(r.PERIO,config)]||officialName;
                         html += `
-                            <div class="bg-white/10 p-3 rounded-xl border border-white/10 flex flex-col items-center justify-center cursor-pointer hover:bg-white/20 transition" onclick='openSubjectMemo(${memoArg})'>
+                            <button type="button" data-period="${escapeHTML(r.PERIO)}" data-official-subject="${escapeHTML(officialName)}" class="bg-white/10 p-3 rounded-xl border border-white/10 flex flex-col items-center justify-center cursor-pointer hover:bg-white/20 transition text-inherit">
                                 <span class="text-white/60 text-xs mb-1">${escapeHTML(perioName)}</span>
-                                <span class="font-bold text-base text-center line-clamp-1">${escapeHTML(r.ITRT_CNTNT || '')}</span>
-                            </div>
+                                <span class="font-bold text-base text-center line-clamp-1">${escapeHTML(effectiveName)}</span>
+                            </button>
                         `;
 
                         // 커스텀 시간에 맞추어 스케줄 추가
@@ -2341,7 +2413,7 @@
                             const [eh, em] = timeCfg.end.split(':').map(Number);
                             dailyTimetableSchedules.push({
                                 id: 'time_' + r.PERIO,
-                                title: `[${timeCfg.name}] ${r.ITRT_CNTNT}`,
+                                title: `[${timeCfg.name}] ${effectiveName}`,
                                 sh, sm, eh, em,
                                 color: 'bg-indigo-500/30 border-indigo-500/50'
                             });
@@ -2363,6 +2435,8 @@
                     });
 
                     container.innerHTML = html + offlineNote(result);
+                    container.querySelectorAll('[data-period]').forEach(card=>card.addEventListener('click',()=>handleTimetableSubjectClick(card.dataset.period,card.dataset.officialSubject||'')));
+                    container.classList.toggle('timetable-subject-edit-mode',timetableEditMode);
                 } else {
                     container.innerHTML = '<div class="col-span-2 text-white/50 text-center py-2">NEIS에 오늘 등록된 시간표가 없습니다.</div>';
                 }
@@ -2371,7 +2445,7 @@
 
             } catch (e) {
                 console.error(e);
-                renderApiError('timetable-content', '시간표를 불러오지 못했습니다. 연결 상태를 확인해주세요.', fetchNeisTimetable);
+                renderApiError('timetable-content', neisUserError(e,'시간표'), fetchNeisTimetable);
             }
         }
 
