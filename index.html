@@ -239,7 +239,14 @@
         #home-edit-toggle { position: fixed; top: max(24px, env(safe-area-inset-top)); right: 24px; z-index: 45; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transform: translateY(-6px) scale(0.94); transition: opacity 0.25s ease, transform 0.25s ease; }
         #home-edit-toggle.visible { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
         #home-edit-toggle svg { width: 20px; height: 20px; }
-        #timetable-actions { position: fixed; top: max(24px, env(safe-area-inset-top)); right: 24px; z-index: 45; display: flex; gap: 8px; }
+        #timetable-actions { position: fixed; top: max(24px, env(safe-area-inset-top)); right: 24px; z-index: 45; display: flex; gap: 8px; transition: gap .36s ease; }
+        #timetable-actions .timetable-action-add { order: 1; }
+        #timetable-actions .timetable-action-share { order: 2; }
+        #timetable-actions .timetable-action-edit { order: 3; }
+        #timetable-actions.timetable-editing { gap: 0; }
+        #timetable-actions.timetable-editing .timetable-action-add,
+        #timetable-actions.timetable-editing .timetable-action-share { width: 0; height: 0; min-width: 0; flex: 0 0 0; padding: 0; margin: 0; border-width: 0; opacity: 0; transform: scale(.72); overflow: hidden; pointer-events: none; }
+        #timetable-actions .home-edit-tool { transition: width .36s ease, height .36s ease, flex-basis .36s ease, padding .36s ease, margin .36s ease, border-width .36s ease, opacity .24s ease, transform .36s ease; }
         #timetable-actions .home-edit-tool svg { width: 20px; height: 20px; }
         #timetable-actions button[aria-pressed="true"] { background: rgba(255,255,255,.25); box-shadow: inset 0 1px 2px rgba(255,255,255,.18), 0 4px 14px rgba(0,0,0,.2); }
         #timetable-share-menu { position: fixed; top: calc(max(24px, env(safe-area-inset-top)) + 54px); right: 24px; z-index: 60; width: min(220px, calc(100vw - 48px)); }
@@ -285,7 +292,11 @@
             width: calc(100% - 48px); max-width: 400px;
             z-index: 50; display: flex; justify-content: space-between; padding: 8px; touch-action: none;
             background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform .42s cubic-bezier(.22,.68,0,1.05), opacity .28s ease;
+            will-change: transform, opacity;
         }
+        .bottom-nav.timetable-edit-hidden { transform: translate(-50%, calc(100% + 32px)); opacity: 0; pointer-events: none; }
+        @media (prefers-reduced-motion: reduce) { #timetable-actions, #timetable-actions button, .bottom-nav { transition-duration: .01ms; } }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: white; font-size: 0.7rem; transition: all 0.3s ease; position: relative; z-index: 10; padding: 8px 16px; flex: 1; }
         #nav-indicator { position: absolute; top: 8px; bottom: 8px; background: rgba(0, 0, 0, 0.4); border-radius: 9999px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 0; box-shadow: inset 0 1px 4px rgba(0,0,0,0.5); }
         #nav-indicator.dragging { transition: none; cursor: grabbing; }
@@ -443,9 +454,9 @@
                 <h2 id="timetable-title" class="text-2xl font-bold drop-shadow-md anim-text">일일 스케줄</h2>
             </div>
             <div id="timetable-actions" aria-label="시간표 도구">
-                <button type="button" id="timetable-action-edit" class="home-edit-tool liquid-glass pill" onclick="toggleTimetableEditMode()" aria-label="과목 수정" title="과목 수정" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L8 18l-4 1 1-4Z"/></svg></button>
-                <button type="button" class="home-edit-tool liquid-glass pill" onclick="openScheduleModal(new Date())" aria-label="일정 추가" title="일정 추가"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
-                <button type="button" id="timetable-share-toggle" class="home-edit-tool liquid-glass pill" onclick="toggleTimetableShareMenu()" aria-label="시간표 공유 및 내보내기" title="공유 및 내보내기" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.6 6.6-4.2M8.7 13.4l6.6 4.2"/></svg></button>
+                <button type="button" id="timetable-action-edit" class="home-edit-tool liquid-glass pill timetable-action-edit" onclick="toggleTimetableEditMode()" aria-label="과목 수정" title="과목 수정" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L8 18l-4 1 1-4Z"/></svg></button>
+                <button type="button" class="home-edit-tool liquid-glass pill timetable-action-add" onclick="openScheduleModal(new Date())" aria-label="일정 추가" title="일정 추가"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+                <button type="button" id="timetable-share-toggle" class="home-edit-tool liquid-glass pill timetable-action-share" onclick="toggleTimetableShareMenu()" aria-label="시간표 공유 및 내보내기" title="공유 및 내보내기" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.6 6.6-4.2M8.7 13.4l6.6 4.2"/></svg></button>
             </div>
             <div id="timetable-share-menu" class="liquid-glass card p-2 hidden" role="menu" aria-label="시간표 공유 및 저장">
                 <button type="button" class="timetable-share-menu-item" role="menuitem" onclick="closeTimetableShareMenu();copyTimetableText()">텍스트 복사</button>
@@ -509,6 +520,14 @@
                         <div class="theme-picker shrink-0" role="group" aria-label="화면 테마 설정">
                             <button type="button" class="theme-choice" data-theme-choice="dark" aria-pressed="true">다크</button>
                             <button type="button" class="theme-choice" data-theme-choice="light" aria-pressed="false">라이트</button>
+                        </div>
+                    </div>
+                    <div class="px-5 py-4 border-t border-white/10">
+                        <div class="font-medium">일일 스케줄 공유 항목</div>
+                        <div class="text-white/50 text-xs mt-1 mb-3">일정표에는 오늘의 급식 메뉴가 포함됩니다.</div>
+                        <div class="flex flex-wrap gap-x-5 gap-y-2 text-sm">
+                            <label class="inline-flex items-center gap-2 cursor-pointer"><input id="share-include-assessments" type="checkbox" class="accent-emerald-400"><span>오늘의 수행평가 (이름·과목·메모·완료 여부)</span></label>
+                            <label class="inline-flex items-center gap-2 cursor-pointer"><input id="share-include-weather" type="checkbox" class="accent-emerald-400"><span>현재 날씨</span></label>
                         </div>
                     </div>
                 </div>
@@ -852,6 +871,11 @@
         function toggleTimetableEditMode() {
             timetableEditMode=!timetableEditMode;
             const button=document.getElementById('timetable-action-edit'); const content=document.getElementById('timetable-content'); const title=document.getElementById('timetable-title');
+            const actions=document.getElementById('timetable-actions'), nav=document.getElementById('bottom-navigation');
+            actions?.classList.toggle('timetable-editing',timetableEditMode);
+            nav?.classList.toggle('timetable-edit-hidden',timetableEditMode); nav?.setAttribute('aria-hidden',String(timetableEditMode));
+            nav?.querySelectorAll('.nav-item').forEach(item=>item.tabIndex=timetableEditMode?-1:0);
+            if(timetableEditMode) closeTimetableShareMenu();
             button.setAttribute('aria-pressed',String(timetableEditMode)); title.textContent=timetableEditMode?'스케줄 편집':'일일 스케줄';
             button.title=timetableEditMode?'편집 완료':'과목 수정'; button.setAttribute('aria-label',button.title);
             button.innerHTML=timetableEditMode
@@ -905,82 +929,30 @@
                 const copied = document.execCommand('copy'); area.remove(); showCustomModal({message:copied?'시간표와 급식 메뉴를 복사했습니다.':'클립보드에 복사하지 못했습니다.'});
             }
         }
+        const timetableShareOptionsKey = "adkTimetableShareOptions";
+        function getTimetableShareOptions() { try { const value=JSON.parse(localStorage.getItem(timetableShareOptionsKey)||"{}"); return {assessments:!!value.assessments,weather:!!value.weather}; } catch (_) { return {assessments:false,weather:false}; } }
+        function saveTimetableShareOptions() { const options={assessments:!!document.getElementById("share-include-assessments")?.checked,weather:!!document.getElementById("share-include-weather")?.checked}; try { localStorage.setItem(timetableShareOptionsKey,JSON.stringify(options)); } catch (_) { showCustomModal({message:"공유 항목 설정을 저장하지 못했습니다."}); } }
+        function initTimetableShareOptions() { const options=getTimetableShareOptions(), assessments=document.getElementById("share-include-assessments"), weather=document.getElementById("share-include-weather"); if(assessments){assessments.checked=options.assessments;assessments.addEventListener("change",saveTimetableShareOptions);} if(weather){weather.checked=options.weather;weather.addEventListener("change",saveTimetableShareOptions);} }
         async function createTimetableImageBlob() {
-            let entries = Array.isArray(dailyTimetableSchedules) ? [...dailyTimetableSchedules] : [];
-            if (!entries.length) {
-                entries = Array.from(document.querySelectorAll("#timetable-content > div")).map((el, i) => {
-                    const spans = el.querySelectorAll("span");
-                    return spans.length >= 2 ? { label: spans[0].textContent + " · ", title: spans[1].textContent, _order: i } : null;
-                }).filter(Boolean);
-            }
-            if (!entries.length && !(Array.isArray(todayMealMenuItems) && todayMealMenuItems.length)) return null;
-            entries = entries.map(entry => ({
-                ...entry,
-                isMeal: String(entry.title || "").startsWith("🍱"),
-                menuItems: String(entry.title || "").startsWith("🍱") && Array.isArray(todayMealMenuItems) ? todayMealMenuItems.filter(Boolean) : []
-            }));
-            if (todayMealMenuItems.length && !entries.some(entry => entry.isMeal)) entries.push({ label: "급식", title: "🍱 급식", isMeal: true, menuItems: todayMealMenuItems.filter(Boolean) });
-            entries.sort((a, b) => (Number(a.sh) || 0) * 60 + (Number(a.sm) || 0) - ((Number(b.sh) || 0) * 60 + (Number(b.sm) || 0)));
-
-            const canvas = document.createElement("canvas");
-            const width = 1080;
-            const ctx = canvas.getContext("2d");
-            if (!ctx) return null;
-            if (document.fonts && document.fonts.ready) await Promise.race([document.fonts.ready, new Promise(resolve => setTimeout(resolve, 1000))]);
-            const menuFont = '17px "Gowun Dodum", sans-serif';
-            const lineHeight = 23;
-            const wrap = (text, maxWidth) => {
-                const words = String(text).split(/\s+/);
-                const lines = [];
-                let line = "";
-                words.forEach(word => {
-                    const candidate = line ? line + " " + word : word;
-                    if (line && ctx.measureText(candidate).width > maxWidth) { lines.push(line); line = word; }
-                    else line = candidate;
-                });
-                if (line) lines.push(line);
-                return lines.length ? lines : [""];
-            };
-            const rowLayouts = entries.map(entry => {
-                if (!entry.isMeal) return { entry, lines: [], height: 82 };
-                ctx.font = menuFont;
-                const source = entry.menuItems.length ? entry.menuItems : ["급식 메뉴를 불러오지 못했습니다."];
-                const lines = source.flatMap(item => wrap("· " + item, 430));
-                return { entry, lines, height: Math.max(112, 48 + lines.length * lineHeight) };
-            });
-            const headerHeight = 150;
-            canvas.width = width;
-            canvas.height = headerHeight + rowLayouts.reduce((sum, row) => sum + row.height, 0) + 32;
-            ctx.fillStyle = "#111827"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = "#f8fafc"; ctx.font = 'bold 34px "Gowun Dodum", sans-serif'; ctx.fillText("오늘의 시간표", 32, 52);
-            ctx.fillStyle = "#a5b4fc"; ctx.font = '19px "Gowun Dodum", sans-serif'; ctx.fillText(new Intl.DateTimeFormat("ko-KR", { dateStyle: "full" }).format(new Date()), 32, 88);
-
-            let y = 120;
-            rowLayouts.forEach((row, index) => {
-                const entry = row.entry;
-                const cardHeight = row.height - 10;
-                if (entry.isMeal) {
-                    ctx.fillStyle = "#183328"; ctx.beginPath(); ctx.roundRect(24, y, 445, cardHeight, 16); ctx.fill();
-                    ctx.fillStyle = "#0b1019"; ctx.beginPath(); ctx.roundRect(481, y, width - 505, cardHeight, 16); ctx.fill();
-                    ctx.fillStyle = "#a7f3d0"; ctx.font = 'bold 18px "Gowun Dodum", sans-serif';
-                    const timeText = entry.label || (String(entry.sh).padStart(2, "0") + ":" + String(entry.sm).padStart(2, "0") + "–" + String(entry.eh).padStart(2, "0") + ":" + String(entry.em));
-                    ctx.fillText(timeText, 42, y + 32, 405);
-                    ctx.fillStyle = "#f8fafc"; ctx.font = '22px "Gowun Dodum", sans-serif'; ctx.fillText(String(entry.title || "🍱 급식").replace(/^🍱\s*/, ""), 42, y + 68, 405);
-                    ctx.fillStyle = "#9ca3af"; ctx.font = 'bold 14px "Gowun Dodum", sans-serif'; ctx.fillText("오늘의 급식 메뉴", 500, y + 25);
-                    ctx.fillStyle = "#f3f4f6"; ctx.font = menuFont;
-                    row.lines.forEach((line, lineIndex) => ctx.fillText(line, 500, y + 49 + lineIndex * lineHeight, 530));
-                } else {
-                    ctx.fillStyle = index % 2 ? "#1f2937" : "#263247"; ctx.beginPath(); ctx.roundRect(24, y, width - 48, cardHeight, 16); ctx.fill();
-                    ctx.fillStyle = "#a5b4fc"; ctx.font = 'bold 18px "Gowun Dodum", sans-serif';
-                    const timeText = entry.label || (String(entry.sh).padStart(2, "0") + ":" + String(entry.sm).padStart(2, "0") + "–" + String(entry.eh).padStart(2, "0") + ":" + String(entry.em));
-                    ctx.fillText(timeText, 44, y + 40, 210);
-                    ctx.fillStyle = "#f8fafc"; ctx.font = '20px "Gowun Dodum", sans-serif'; ctx.fillText(String(entry.title || "일정").slice(0, 45), 280, y + 40, 745);
-                }
-                y += row.height;
-            });
-            return new Promise(resolve => canvas.toBlob(blob => resolve(blob || null), "image/png"));
-        }
-        async function saveTimetableImage() {
+            let entries=Array.isArray(dailyTimetableSchedules)?[...dailyTimetableSchedules]:[];
+            if(!entries.length) entries=Array.from(document.querySelectorAll("#timetable-content > div")).map((el,i)=>{const spans=el.querySelectorAll("span");return spans.length>=2?{label:spans[0].textContent+" · ",title:spans[1].textContent,_order:i}:null;}).filter(Boolean);
+            const options=getTimetableShareOptions(),today=localDayKey(),assessments=options.assessments?assessmentTasks.filter(task=>task.dueDate===today):[];
+            if(!entries.length&&!todayMealMenuItems.length&&!assessments.length&&!options.weather)return null;
+            entries=entries.map(entry=>({...entry,isMeal:String(entry.title||"").startsWith("🍱"),menuItems:String(entry.title||"").startsWith("🍱")&&Array.isArray(todayMealMenuItems)?todayMealMenuItems.filter(Boolean):[]}));
+            if(todayMealMenuItems.length&&!entries.some(entry=>entry.isMeal))entries.push({label:"급식",title:"🍱 급식",isMeal:true,menuItems:todayMealMenuItems.filter(Boolean)});
+            entries.sort((a,b)=>(Number(a.sh)||0)*60+(Number(a.sm)||0)-((Number(b.sh)||0)*60+(Number(b.sm)||0)));
+            const canvas=document.createElement("canvas"),width=1080,ctx=canvas.getContext("2d");if(!ctx)return null;
+            if(document.fonts?.ready)await Promise.race([document.fonts.ready,new Promise(resolve=>setTimeout(resolve,1000))]);
+            const font='17px "Gowun Dodum", sans-serif',lineHeight=24;
+            const wrap=(text,maxWidth)=>{const words=String(text||"").split(/\s+/),lines=[];let line="";words.forEach(word=>{const candidate=line?line+" "+word:word;if(line&&ctx.measureText(candidate).width>maxWidth){lines.push(line);line=word;}else line=candidate;});if(line)lines.push(line);return lines.length?lines:[""];};
+            const rows=[];
+            entries.forEach(entry=>{if(entry.isMeal){ctx.font=font;const source=entry.menuItems.length?entry.menuItems:["급식 메뉴를 불러오지 못했습니다."];const lines=source.flatMap(item=>wrap("· "+item,520));rows.push({type:"meal",entry,lines,height:Math.max(112,48+lines.length*lineHeight)});}else rows.push({type:"schedule",entry,height:82});});
+            if(options.assessments){ctx.font=font;const lines=assessments.length?assessments.flatMap(task=>[...wrap(`${task.done?"✓ 완료":"○ 미완료"}  ${task.title}${task.subject?" · "+task.subject:""}  ·  마감 ${task.dueDate}`,990),...(task.note?wrap("메모: "+task.note,990):[])]):["오늘 마감인 수행평가가 없습니다."];rows.push({type:"assessments",lines,height:60+lines.length*lineHeight});}
+            if(options.weather){const condition=weatherBriefData?.condition||"날씨 정보 없음",location=document.getElementById("weather-location")?.textContent?.trim(),weatherText=weatherBriefData?.condition?`${location&&location!=="위치 확인 중..."?location+" · ":""}${weatherBriefData.temp}°C · ${condition}`:"현재 날씨를 불러오지 못했습니다.";rows.push({type:"weather",lines:wrap(weatherText,990),height:84});}
+            canvas.width=width;canvas.height=150+rows.reduce((sum,row)=>sum+row.height,0)+32;ctx.fillStyle="#111827";ctx.fillRect(0,0,width,canvas.height);ctx.fillStyle="#f8fafc";ctx.font='bold 34px "Gowun Dodum", sans-serif';ctx.fillText("오늘의 시간표",32,52);ctx.fillStyle="#a5b4fc";ctx.font='19px "Gowun Dodum", sans-serif';ctx.fillText(new Intl.DateTimeFormat("ko-KR",{dateStyle:"full"}).format(new Date()),32,88);
+            let y=120;rows.forEach((row,index)=>{const entry=row.entry,cardHeight=row.height-10;if(row.type==="meal"){ctx.fillStyle="#183328";ctx.beginPath();ctx.roundRect(24,y,445,cardHeight,16);ctx.fill();ctx.fillStyle="#0b1019";ctx.beginPath();ctx.roundRect(481,y,width-505,cardHeight,16);ctx.fill();ctx.fillStyle="#a7f3d0";ctx.font='bold 18px "Gowun Dodum", sans-serif';ctx.fillText(entry.label||(String(entry.sh).padStart(2,"0")+":"+String(entry.sm).padStart(2,"0")+"–"+String(entry.eh).padStart(2,"0")+":"+String(entry.em)),42,y+32,405);ctx.fillStyle="#f8fafc";ctx.font='22px "Gowun Dodum", sans-serif';ctx.fillText(String(entry.title||"🍱 급식").replace(/^🍱\s*/,""),42,y+68,405);ctx.fillStyle="#9ca3af";ctx.font='bold 14px "Gowun Dodum", sans-serif';ctx.fillText("오늘의 급식 메뉴",500,y+25);ctx.fillStyle="#f3f4f6";ctx.font=font;row.lines.forEach((line,i)=>ctx.fillText(line,500,y+49+i*lineHeight,530));}else{ctx.fillStyle=row.type==="assessments"?"#30291d":row.type==="weather"?"#1e293b":(index%2?"#1f2937":"#263247");ctx.beginPath();ctx.roundRect(24,y,width-48,cardHeight,16);ctx.fill();ctx.fillStyle=row.type==="assessments"?"#fcd34d":row.type==="weather"?"#7dd3fc":"#a5b4fc";ctx.font='bold 18px "Gowun Dodum", sans-serif';if(row.type==="schedule"){ctx.fillText(entry.label||(String(entry.sh).padStart(2,"0")+":"+String(entry.sm).padStart(2,"0")+"–"+String(entry.eh).padStart(2,"0")+":"+String(entry.em)),44,y+40,210);ctx.fillStyle="#f8fafc";ctx.font='20px "Gowun Dodum", sans-serif';ctx.fillText(String(entry.title||"일정").slice(0,45),280,y+40,745);}else{ctx.fillText(row.type==="assessments"?"오늘의 수행평가":"현재 날씨",44,y+28,980);ctx.fillStyle="#f8fafc";ctx.font=font;row.lines.forEach((line,i)=>ctx.fillText(line,44,y+53+i*lineHeight,980));}}y+=row.height;});
+            return new Promise(resolve=>canvas.toBlob(blob=>resolve(blob||null),"image/png"));
+        }        async function saveTimetableImage() {
             const blob=await createTimetableImageBlob();
             if(!blob) { showCustomModal({message:'시간표 이미지가 없어 저장하지 못했습니다.'}); return; }
             const url=URL.createObjectURL(blob); const anchor=document.createElement('a');
@@ -1056,7 +1028,7 @@
             window.visualViewport?.addEventListener('resize', updateAppViewportHeight, {passive:true});
             window.visualViewport?.addEventListener('scroll', updateAppViewportHeight, {passive:true});
             window.addEventListener('orientationchange', updateAppViewportHeight, {passive:true});
-            setTheme(document.documentElement.dataset.theme || 'dark');
+            setTheme(document.documentElement.dataset.theme || 'dark'); initTimetableShareOptions();
             registerPwa(); renderAssessmentTasks(); renderExamDdayWidget(); updateAssessmentNotificationButton(); checkAssessmentNotifications();
             assessmentNoticeTimer = setInterval(checkAssessmentNotifications, 60000);
             document.querySelectorAll('[data-theme-choice]').forEach(button => button.addEventListener('click', () => setTheme(button.dataset.themeChoice)));
