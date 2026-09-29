@@ -171,6 +171,9 @@
         .timeline-meal-menu-item { display: block; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 11px; line-height: 15px; }
         .timeline-meal-empty { color: rgba(255,255,255,.58); }
         #timetable-content.timetable-subject-edit-mode > [data-period] { outline: 1px dashed rgba(148,163,184,.8); outline-offset: 1px; background-color: rgba(148,163,184,.2); }
+        #timeline-wrapper.timetable-subject-edit-mode .timeline-event { outline: 1px dashed rgba(148,163,184,.8); outline-offset: 2px; cursor: pointer; }
+        #timeline-wrapper.timetable-subject-edit-mode .timeline-event:hover { outline-color: rgba(203,213,225,.98); background-color: rgba(148,163,184,.25); }
+        #timeline-wrapper.timetable-subject-edit-mode .timeline-meal-event { background: rgba(148,163,184,.14) !important; border-radius: 14px; }
         :root[data-theme="light"] .timeline-meal-main { color: #263247; background: rgba(34,197,94,.14); border-color: rgba(45,60,82,.2); }
         :root[data-theme="light"] .timeline-meal-menu { background: rgba(32,43,61,.86); color: rgba(255,255,255,.94); border-color: rgba(255,255,255,.22); }
         
@@ -236,6 +239,14 @@
         #home-edit-toggle { position: fixed; top: max(24px, env(safe-area-inset-top)); right: 24px; z-index: 45; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transform: translateY(-6px) scale(0.94); transition: opacity 0.25s ease, transform 0.25s ease; }
         #home-edit-toggle.visible { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
         #home-edit-toggle svg { width: 20px; height: 20px; }
+        #timetable-actions { position: fixed; top: max(24px, env(safe-area-inset-top)); right: 24px; z-index: 45; display: flex; gap: 8px; }
+        #timetable-actions .home-edit-tool svg { width: 20px; height: 20px; }
+        #timetable-actions button[aria-pressed="true"] { background: rgba(255,255,255,.25); box-shadow: inset 0 1px 2px rgba(255,255,255,.18), 0 4px 14px rgba(0,0,0,.2); }
+        #timetable-share-menu { position: fixed; top: calc(max(24px, env(safe-area-inset-top)) + 54px); right: 24px; z-index: 60; width: min(220px, calc(100vw - 48px)); }
+        .timetable-share-menu-item { display: block; width: 100%; padding: 11px 14px; border-radius: 12px; color: white; text-align: left; font-size: .875rem; }
+        .timetable-share-menu-item:hover { background: rgba(255,255,255,.1); }
+        :root[data-theme="light"] .timetable-share-menu-item { color: #202b3d; }
+        :root[data-theme="light"] .timetable-share-menu-item:hover { background: rgba(45,60,82,.08); }
         #home-edit-tools { position: fixed; top: max(24px, env(safe-area-inset-top)); right: 78px; z-index: 45; display: flex; gap: 8px; opacity: 0; pointer-events: none; transform: translateY(-6px); transition: opacity 0.25s ease, transform 0.25s ease; }
         #home-edit-tools.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
         .home-edit-tool { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; }
@@ -428,9 +439,18 @@
         </div>
 
         <div id="tab-timetable" class="tab-content hidden flex flex-col h-full overflow-hidden">
-            <div class="flex flex-wrap justify-between items-center gap-y-2 mb-4 shrink-0 anim-box">
-                <h2 class="text-2xl font-bold drop-shadow-md anim-text">일일 스케줄</h2>
-<div class="flex flex-wrap justify-end gap-2 shrink-0"><button onclick="toggleTimetableEditMode()" id="timetable-edit-toggle" class="action-button rounded-full px-3 py-2 text-xs font-semibold" aria-pressed="false">과목 수정</button><button onclick="copyTimetableText()" class="action-button rounded-full px-3 py-2 text-xs font-semibold" aria-label="시간표 텍스트 복사" title="시간표 텍스트 복사">복사</button><button onclick="saveTimetableImage()" class="action-button rounded-full px-3 py-2 text-xs font-semibold">이미지 저장</button><button onclick="shareTimetableImage()" class="action-button rounded-full px-3 py-2 text-xs font-semibold">공유</button><button onclick="openScheduleModal(new Date())" class="action-button rounded-full px-4 py-2 text-sm font-semibold">추가</button></div>
+            <div class="flex justify-between items-center mb-4 shrink-0 anim-box">
+                <h2 id="timetable-title" class="text-2xl font-bold drop-shadow-md anim-text">일일 스케줄</h2>
+            </div>
+            <div id="timetable-actions" aria-label="시간표 도구">
+                <button type="button" id="timetable-action-edit" class="home-edit-tool liquid-glass pill" onclick="toggleTimetableEditMode()" aria-label="과목 수정" title="과목 수정" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L8 18l-4 1 1-4Z"/></svg></button>
+                <button type="button" class="home-edit-tool liquid-glass pill" onclick="openScheduleModal(new Date())" aria-label="일정 추가" title="일정 추가"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+                <button type="button" id="timetable-share-toggle" class="home-edit-tool liquid-glass pill" onclick="toggleTimetableShareMenu()" aria-label="시간표 공유 및 내보내기" title="공유 및 내보내기" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.6 6.6-4.2M8.7 13.4l6.6 4.2"/></svg></button>
+            </div>
+            <div id="timetable-share-menu" class="liquid-glass card p-2 hidden" role="menu" aria-label="시간표 공유 및 저장">
+                <button type="button" class="timetable-share-menu-item" role="menuitem" onclick="closeTimetableShareMenu();copyTimetableText()">텍스트 복사</button>
+                <button type="button" class="timetable-share-menu-item" role="menuitem" onclick="closeTimetableShareMenu();saveTimetableImage()">이미지 저장</button>
+                <button type="button" class="timetable-share-menu-item" role="menuitem" onclick="closeTimetableShareMenu();shareTimetableImage()">이미지 공유</button>
             </div>
             
             <div class="liquid-glass card p-2 flex-1 overflow-hidden anim-box d-1 mb-8">
@@ -831,10 +851,34 @@
         function timetableOverrideKey(period, config=null) { let user=config; if(!user) { try { user=JSON.parse(localStorage.getItem('userConfig')||'null'); } catch (_) {} } return `${user?.regionCode||DEFAULT_REGION_CODE}:${user?.schoolCode||DEFAULT_SCHOOL_CODE}:${user?.grade||''}:${user?.class||''}:${new Date().getDay()}:${period}`; }
         function toggleTimetableEditMode() {
             timetableEditMode=!timetableEditMode;
-            const button=document.getElementById('timetable-edit-toggle'); const content=document.getElementById('timetable-content');
-            button.textContent=timetableEditMode?'수정 완료':'과목 수정'; button.setAttribute('aria-pressed',String(timetableEditMode));
+            const button=document.getElementById('timetable-action-edit'); const content=document.getElementById('timetable-content'); const title=document.getElementById('timetable-title');
+            button.setAttribute('aria-pressed',String(timetableEditMode)); title.textContent=timetableEditMode?'스케줄 편집':'일일 스케줄';
+            button.title=timetableEditMode?'편집 완료':'과목 수정'; button.setAttribute('aria-label',button.title);
+            button.innerHTML=timetableEditMode
+                ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>'
+                : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L8 18l-4 1 1-4Z"/></svg>';
             content.classList.toggle('timetable-subject-edit-mode',timetableEditMode);
+            const timeline=document.getElementById('timeline-wrapper');
+            timeline?.classList.toggle('timetable-subject-edit-mode',timetableEditMode);
+            timeline?.querySelectorAll('.timeline-event').forEach(eventEl=>{
+                if(eventEl.dataset.customSchedule==='true') return;
+                if(timetableEditMode) { eventEl.setAttribute('role','button'); eventEl.tabIndex=0; eventEl.setAttribute('aria-label',`일정 편집: ${eventEl.dataset.eventTitle||eventEl.textContent.trim()}`); }
+                else { eventEl.removeAttribute('role'); eventEl.tabIndex=-1; eventEl.setAttribute('aria-label',eventEl.dataset.eventTitle||eventEl.textContent.trim()); }
+            });
         }
+        function toggleTimetableShareMenu() {
+            const menu=document.getElementById('timetable-share-menu'); const button=document.getElementById('timetable-share-toggle');
+            const opening=menu.classList.contains('hidden'); menu.classList.toggle('hidden',!opening); button.setAttribute('aria-expanded',String(opening));
+        }
+        function closeTimetableShareMenu() {
+            document.getElementById('timetable-share-menu')?.classList.add('hidden');
+            document.getElementById('timetable-share-toggle')?.setAttribute('aria-expanded','false');
+        }
+        document.addEventListener('pointerdown',event=>{
+            const menu=document.getElementById('timetable-share-menu'); const toggle=document.getElementById('timetable-share-toggle');
+            if(menu&&!menu.classList.contains('hidden')&&!menu.contains(event.target)&&!toggle?.contains(event.target)) closeTimetableShareMenu();
+        });
+        document.addEventListener('keydown',event=>{if(event.key==='Escape')closeTimetableShareMenu();});
         function handleTimetableSubjectClick(period, officialName) {
             const key=timetableOverrideKey(period); const overrides=readTimetableOverrides(); const savedOverride=typeof overrides[key]==='string'?overrides[key].slice(0,80):'';
             if(timetableEditMode) {
@@ -1178,6 +1222,7 @@
 
         /* --- 탭 기능 및 타임라인 정렬 --- */
         function switchTab(tabId, element) {
+            if(tabId !== 'timetable') closeTimetableShareMenu();
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.getElementById('tab-' + tabId).classList.remove('hidden');
             
@@ -2414,6 +2459,7 @@
                             dailyTimetableSchedules.push({
                                 id: 'time_' + r.PERIO,
                                 title: `[${timeCfg.name}] ${effectiveName}`,
+                                officialSubject: officialName,
                                 sh, sm, eh, em,
                                 color: 'bg-indigo-500/30 border-indigo-500/50'
                             });
@@ -2658,7 +2704,7 @@
             }
         }
 
-        function addEventToTimeline(startH, startM, endH, endM, title, colorClass, id, isCustom) {
+        function addEventToTimeline(startH, startM, endH, endM, title, colorClass, id, isCustom, officialSubject = '') {
             const slot = document.querySelector('.time-slot[data-hour="' + startH + '"]');
             if (!slot) return;
             const isMeal = String(title).startsWith('🍱');
@@ -2668,6 +2714,7 @@
             eventEl.className = 'timeline-event ' + colorClass + ' text-white font-medium shadow-md flex items-center' + (isMeal ? ' timeline-meal-event' : '');
             eventEl.style.height = height + 'px';
             eventEl.style.top = (startM + 1) + 'px';
+            eventEl.dataset.customSchedule=String(!!isCustom); eventEl.dataset.eventTitle=String(title);
 
             if (isMeal) {
                 const main = document.createElement('div');
@@ -2728,7 +2775,20 @@
             } else {
                 const label = document.createElement('span'); label.className = 'drop-shadow-sm line-clamp-2 text-xs w-full'; label.textContent = String(title); eventEl.appendChild(label);
             }
-            if (isCustom) eventEl.onclick = () => { openScheduleModal(selectedModalDate, id); };
+            if (isCustom) {
+                eventEl.onclick = () => openScheduleModal(selectedModalDate, id);
+                eventEl.setAttribute('aria-label', `일정 수정: ${title}`);
+            } else {
+                eventEl.addEventListener('click', () => {
+                    if(!timetableEditMode) return;
+                    if(isMeal) { openPeriodTimeModal(); return; }
+                    const period=String(id||'').replace(/^time_/, '');
+                    const subject=officialSubject || String(title).replace(/^\[[^\]]+\]\s*/, '');
+                    if(period) handleTimetableSubjectClick(period, subject);
+                });
+                eventEl.setAttribute('aria-label', timetableEditMode ? `일정 편집: ${title}` : String(title));
+                if(timetableEditMode) { eventEl.setAttribute('role','button'); eventEl.tabIndex=0; eventEl.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();eventEl.click();}}); }
+            }
             slot.appendChild(eventEl);
         }
         // --- 캘린더 기능 ---
