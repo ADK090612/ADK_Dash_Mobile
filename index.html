@@ -471,7 +471,7 @@
             <div id="calendar-scroll-area" class="liquid-glass card p-5 flex-1 overflow-y-auto hide-scrollbar relative anim-box d-1" onscroll="handleCalendarScroll()">
             </div>
 
-            <section class="liquid-glass card p-5 anim-box d-3 mt-4 mb-4"><div class="flex flex-wrap justify-between items-center gap-2 mb-3"><div class="min-w-0"><h3 class="text-lg font-semibold">수행평가 체크리스트</h3><p class="text-xs text-white/50">과목별 제출일을 관리해요</p></div><div class="flex gap-2"><button id="assessment-notification-toggle" onclick="toggleAssessmentNotifications()" class="action-button rounded-full px-3 py-2 text-xs" aria-pressed="false">알림 끔</button><button onclick="openAssessmentModal()" class="action-button rounded-full px-3 py-2 text-sm">+ 추가</button></div></div><ul id="assessment-task-list" class="space-y-2"></ul></section>
+            <section class="liquid-glass card p-5 anim-box d-3 mt-4 mb-4"><div class="flex flex-wrap justify-between items-center gap-2 mb-3"><div class="min-w-0"><h3 class="text-lg font-semibold">수행평가 체크리스트</h3><p class="text-xs text-white/50">과목별 제출일을 관리해요</p></div><div class="flex gap-2"><button id="assessment-notification-toggle" type="button" onclick="toggleAssessmentNotifications()" class="action-button rounded-full px-3 py-2 text-xs inline-flex items-center gap-1.5" aria-label="수행평가 알림 끔" title="수행평가 알림 끔" aria-pressed="false"><svg class="assessment-bell-on w-4 h-4 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><svg class="assessment-bell-off w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-9.8-4.6M6 8c0 7-3 7-3 9h13"/><path d="M10 21h4M3 3l18 18"/></svg><span class="assessment-notification-label">알림 끔</span></button><button onclick="openAssessmentModal()" class="action-button rounded-full px-3 py-2 text-sm">+ 추가</button></div></div><ul id="assessment-task-list" class="space-y-2"></ul></section>
         </div>
 
         <div id="tab-account" class="tab-content hidden pb-10">
@@ -1018,7 +1018,7 @@
             const button = document.getElementById('assessment-notification-toggle');
             if(!button) return;
             let enabled = false; try { enabled = localStorage.getItem('adkAssessmentNotifications') === '1'; } catch (_) {}
-            button.textContent = enabled ? '알림 켬' : '알림 끔'; button.setAttribute('aria-pressed', String(enabled));
+            const label = button.querySelector('.assessment-notification-label'); if(label) label.textContent = enabled ? '알림 켬' : '알림 끔'; button.querySelector('.assessment-bell-on')?.classList.toggle('hidden', !enabled); button.querySelector('.assessment-bell-off')?.classList.toggle('hidden', enabled); button.setAttribute('aria-label', enabled ? '수행평가 알림 켬' : '수행평가 알림 끔'); button.title = enabled ? '수행평가 알림 켬' : '수행평가 알림 끔'; button.setAttribute('aria-pressed', String(enabled));
         }
         async function toggleAssessmentNotifications() {
             if(!('Notification' in window)) { showCustomModal({message:'이 브라우저는 알림 기능을 지원하지 않습니다.'}); return; }
