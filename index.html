@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="color-scheme" content="light dark">
     <meta name="theme-color" content="#111827"><link rel="manifest" href="./manifest.json"><link rel="icon" href="./icon.svg" type="image/svg+xml">
     <title>ADK 대시보드</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -303,7 +304,7 @@
         #nav-indicator { pointer-events: none; }
     </style>
     <script>
-        try { if (localStorage.getItem('adkTheme') === 'light') document.documentElement.dataset.theme = 'light'; } catch (error) {}
+        try { const initialTheme = localStorage.getItem('adkTheme') === 'light' ? 'light' : 'dark'; document.documentElement.dataset.theme = initialTheme; document.documentElement.style.colorScheme = initialTheme; } catch (error) { document.documentElement.style.colorScheme = 'dark'; }
     </script>
 </head>
 <body>
@@ -1019,6 +1020,7 @@
         function setTheme(theme) {
             const selectedTheme = theme === 'light' ? 'light' : 'dark';
             document.documentElement.dataset.theme = selectedTheme;
+            document.documentElement.style.colorScheme = selectedTheme;
             try { localStorage.setItem('adkTheme', selectedTheme); } catch (error) { console.warn('테마 설정을 저장하지 못했습니다.', error); }
             document.querySelectorAll('[data-theme-choice]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.themeChoice === selectedTheme)));
         }
