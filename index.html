@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#111827"><link rel="manifest" href="./manifest.json"><link rel="icon" href="./icon.svg" type="image/svg+xml">
     <title>ADK 대시보드</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet">
@@ -95,6 +96,12 @@
         .action-button { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; border:1px solid rgba(255,255,255,.26); background:rgba(255,255,255,.14); color:white; border-radius:9999px; box-shadow:inset 0 1px 1px rgba(255,255,255,.16),0 6px 18px rgba(0,0,0,.12); transition:background .2s,transform .2s,box-shadow .2s; }
         .action-button:hover { background:rgba(255,255,255,.23); box-shadow:inset 0 1px 1px rgba(255,255,255,.2),0 8px 22px rgba(0,0,0,.16); }
         .action-button:active { transform:scale(.97); }
+        .timetable-toolbar-button { appearance: none; -webkit-appearance: none; background-clip: padding-box; outline: none; box-shadow: 0 6px 16px rgba(0,0,0,.22); border-color: rgba(255,255,255,.2); }
+        .timetable-toolbar-button:hover { background-color: rgba(255,255,255,.2) !important; box-shadow: 0 8px 18px rgba(0,0,0,.25); }
+        .timetable-toolbar-button:active { transform: scale(.97); }
+        .timetable-toolbar-button:focus-visible { outline: 2px solid rgba(148,163,184,.7); outline-offset: 3px; }
+        :root[data-theme="light"] .timetable-toolbar-button { color: #202b3d; background: rgba(24,31,43,.08); border-color: rgba(45,60,82,.18); box-shadow: 0 7px 17px rgba(0,0,0,.22); }
+        :root[data-theme="light"] .timetable-toolbar-button:hover { background: rgba(24,31,43,.12) !important; box-shadow: 0 8px 19px rgba(0,0,0,.25); }
         .theme-picker { display:inline-flex; gap:3px; padding:4px; border:1px solid rgba(255,255,255,.22); background:rgba(255,255,255,.08); border-radius:9999px; backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); box-shadow:inset 0 1px 2px rgba(255,255,255,.1),0 8px 24px rgba(0,0,0,.12); }
         .theme-choice { min-width:72px; display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:8px 12px; border-radius:9999px; color:rgba(255,255,255,.68); font-size:.78rem; font-weight:600; transition:color .2s,background .2s,box-shadow .2s; }
         .theme-choice[aria-pressed="true"] { color:#fff; background:rgba(255,255,255,.2); box-shadow:inset 0 1px 1px rgba(255,255,255,.16),0 2px 8px rgba(0,0,0,.12); }
@@ -150,6 +157,16 @@
             cursor: pointer; transition: transform 0.2s; z-index: 5;
         }
         .timeline-event:hover { transform: scale(1.02); z-index: 20; }
+        .timeline-event.timeline-meal-event { background: transparent !important; border: 0 !important; box-shadow: none !important; backdrop-filter: none; padding: 0; display: flex; align-items: stretch; gap: 6px; overflow: visible; }
+        .timeline-event.timeline-meal-event:hover { transform: none; }
+        .timeline-meal-main { flex: 0 0 39%; min-width: 0; display: flex; align-items: center; padding: 6px 9px; border: 1px solid rgba(255,255,255,.22); border-radius: 12px; background: rgba(34,197,94,.17); backdrop-filter: blur(10px); color: #f0fdf4; box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 4px 12px rgba(0,0,0,.12); }
+        .timeline-meal-menu { flex: 0 0 auto; min-width: 0; height: 100%; overflow: hidden; padding: 6px 9px; border: 1px solid rgba(255,255,255,.2); border-radius: 12px; background: rgba(15,23,42,.82); backdrop-filter: blur(14px); color: rgba(255,255,255,.9); box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 6px 16px rgba(0,0,0,.2); }
+        .timeline-meal-menu-list { display: grid; flex: 1 1 auto; min-height: 0; grid-auto-flow: column; align-content: start; gap: 1px 10px; overflow: hidden; }
+        .timeline-meal-menu-title { display: block; color: rgba(255,255,255,.62); font-size: 10px; font-weight: 700; letter-spacing: .02em; margin-bottom: 2px; }
+        .timeline-meal-menu-item { display: block; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 11px; line-height: 15px; }
+        .timeline-meal-empty { color: rgba(255,255,255,.58); }
+        :root[data-theme="light"] .timeline-meal-main { color: #263247; background: rgba(34,197,94,.14); border-color: rgba(45,60,82,.2); }
+        :root[data-theme="light"] .timeline-meal-menu { background: rgba(32,43,61,.86); color: rgba(255,255,255,.94); border-color: rgba(255,255,255,.22); }
         
         /* 현재 시간 레드 라인 */
         #current-time-line {
@@ -376,6 +393,7 @@
             
             <section class="liquid-glass card p-5 anim-box d-3">
                 <h3 class="text-lg font-semibold mb-3 anim-text d-3">다가오는 학사일정 📅</h3>
+                <div id="home-dday-list" class="space-y-2 mb-3"></div>
                 <ul id="home-schedule-list" class="text-sm space-y-2 min-h-[60px]">
                     <li class="text-white/70 text-sm">일정을 불러오는 중...</li>
                 </ul>
@@ -385,10 +403,10 @@
         <div id="tab-timetable" class="tab-content hidden flex flex-col h-full overflow-hidden">
             <div class="flex justify-between items-center mb-4 shrink-0 anim-box">
                 <h2 class="text-2xl font-bold drop-shadow-md anim-text">일일 스케줄</h2>
-                <button onclick="openScheduleModal(new Date())" class="liquid-glass pill px-4 py-2 text-sm font-semibold hover:bg-white/20 transition">추가</button>
+<div class="flex gap-2"><button onclick="saveTimetableImage()" class="liquid-glass pill timetable-toolbar-button px-3 py-2 text-xs font-semibold">이미지 저장</button><button onclick="openScheduleModal(new Date())" class="liquid-glass pill timetable-toolbar-button px-4 py-2 text-sm font-semibold transition">추가</button></div>
             </div>
             
-            <div class="liquid-glass card p-2 flex-1 overflow-hidden anim-box d-1">
+            <div class="liquid-glass card p-2 flex-1 overflow-hidden anim-box d-1 mb-8">
                 <div class="timeline-scroll-wrapper hide-scrollbar" id="timeline-wrapper">
                     <div class="timeline-container" id="timeline-box">
                         <div id="current-time-line"></div>
@@ -405,6 +423,8 @@
             
             <div id="calendar-scroll-area" class="liquid-glass card p-5 flex-1 overflow-y-auto hide-scrollbar relative anim-box d-1" onscroll="handleCalendarScroll()">
             </div>
+
+            <section class="liquid-glass card p-5 anim-box d-3 mt-4 mb-4"><div class="flex justify-between items-center mb-3"><div><h3 class="text-lg font-semibold">수행평가 체크리스트</h3><p class="text-xs text-white/50">과목별 제출일을 관리해요</p></div><button onclick="openAssessmentModal()" class="action-button rounded-full px-3 py-2 text-sm">+ 추가</button></div><ul id="assessment-task-list" class="space-y-2"></ul></section>
         </div>
 
         <div id="tab-account" class="tab-content hidden pb-10">
@@ -446,6 +466,7 @@
                     </div>
                 </div>
                 
+
                 <button onclick="resetData()" class="w-full liquid-glass card p-4 text-red-300 font-bold text-lg bg-red-500/10 hover:bg-red-500/20 transition-colors border border-red-500/30 anim-box d-3">
                     모든 설정 초기화
                 </button>
@@ -473,6 +494,7 @@
         </button>
     </nav>
 
+    <div id="assessment-modal" class="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300"><form id="assessment-form" class="w-full max-w-sm mx-4 liquid-glass card p-5" onsubmit="saveAssessmentTask(event)"><div class="flex justify-between items-center mb-4"><h3 id="assessment-heading-modal" class="text-lg font-bold">수행평가 추가</h3><button type="button" onclick="closeAssessmentModal()" class="text-xl">&times;</button></div><input id="assessment-title" maxlength="80" required placeholder="평가 이름" class="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white text-sm mb-2"><input id="assessment-subject" maxlength="40" placeholder="과목 (선택)" class="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white text-sm mb-2"><textarea id="assessment-note" maxlength="1000" rows="3" placeholder="메모 (선택)" class="w-full resize-none bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white text-sm mb-2 focus:outline-none"></textarea><input id="assessment-due" type="date" required class="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white text-sm mb-3"><input id="assessment-edit-id" type="hidden"><div class="flex gap-2"><button type="button" onclick="closeAssessmentModal()" class="liquid-glass pill flex-1 py-2">취소</button><button type="submit" class="action-button flex-1 py-2 font-bold">저장</button></div></form></div>
     <div id="schedule-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
         <div class="w-full max-w-sm mx-4 liquid-glass card flex flex-col max-h-[80vh]">
             <div class="p-4 border-b border-white/20 flex justify-between items-center shrink-0">
@@ -599,6 +621,7 @@
         // 브리프 연동 데이터
         let weatherBriefData = { temp: 0, condition: '', isRain: false };
         let todayMealBriefData = '';
+        let todayMealMenuItems = [];
         let detectedAllergiesInMeal = []; // 발견된 알러지 경고 정보 저장
         let briefInterval = null;
 
@@ -746,6 +769,100 @@
             }, 10);
         }
 
+        function localDayKey(d=new Date()){return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");}
+        let assessmentTasks=[];try{const q=JSON.parse(localStorage.getItem("assessmentTasks")||"[]");if(Array.isArray(q))assessmentTasks=q.filter(x=>x&&typeof x.id==="string"&&typeof x.title==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(x.dueDate));}catch(_){}
+        function renderAssessmentTasks(){const ul=document.getElementById("assessment-task-list");if(!ul)return;ul.replaceChildren();const today=localDayKey();assessmentTasks.sort((a,b)=>Number(!!a.done)-Number(!!b.done)||a.dueDate.localeCompare(b.dueDate));if(!assessmentTasks.length){const e=document.createElement("li");e.className="text-sm text-white/50";e.textContent="등록된 수행평가가 없습니다.";ul.append(e);return;}assessmentTasks.forEach(t=>{const li=document.createElement("li");li.className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2";const cb=document.createElement("input");cb.type="checkbox";cb.checked=!!t.done;cb.setAttribute("aria-label",t.title+" 완료");cb.addEventListener("change",()=>{t.done=cb.checked;persistAssessmentTasks();});const b=document.createElement("button");b.type="button";b.className="min-w-0 flex-1 text-left";b.addEventListener("click",()=>openAssessmentModal(t.id));const name=document.createElement("span");name.className="block truncate text-sm font-semibold";name.textContent=t.title;const meta=document.createElement("span");meta.className="block text-xs text-white/50";meta.textContent=(t.subject?t.subject+" · ":"")+t.dueDate+(!t.done&&t.dueDate<today?" · 마감 지남":"");b.append(name,meta);if(t.note){const note=document.createElement("span");note.className="block text-xs text-white/70 mt-1 line-clamp-2";note.textContent=t.note;b.appendChild(note);}const del=document.createElement("button");del.type="button";del.textContent="삭제";del.className="text-xs text-white/50";del.addEventListener("click",()=>{assessmentTasks=assessmentTasks.filter(x=>x.id!==t.id);persistAssessmentTasks();});li.append(cb,b,del);ul.append(li);});}
+        function persistAssessmentTasks(){try{localStorage.setItem("assessmentTasks",JSON.stringify(assessmentTasks));renderAssessmentTasks();return true;}catch(e){showCustomModal({message:"저장 공간이 부족해 저장하지 못했습니다."});return false;}}
+        function openAssessmentModal(id=""){const t=assessmentTasks.find(x=>x.id===id);document.getElementById("assessment-form").reset();document.getElementById("assessment-edit-id").value=t?t.id:"";document.getElementById("assessment-title").value=t?t.title:"";document.getElementById("assessment-subject").value=t?(t.subject||""):"";document.getElementById("assessment-note").value=t?(t.note||""):"";document.getElementById("assessment-due").value=t?t.dueDate:localDayKey();document.getElementById("assessment-heading-modal").textContent=t?"수행평가 수정":"수행평가 추가";const m=document.getElementById("assessment-modal");m.classList.remove("hidden");requestAnimationFrame(()=>m.classList.remove("opacity-0"));}
+        function closeAssessmentModal(){const m=document.getElementById("assessment-modal");m.classList.add("opacity-0");setTimeout(()=>m.classList.add("hidden"),300);}
+        function saveAssessmentTask(e){e.preventDefault();const title=document.getElementById("assessment-title").value.trim(),subject=document.getElementById("assessment-subject").value.trim(),note=document.getElementById("assessment-note").value.trim().slice(0,1000),dueDate=document.getElementById("assessment-due").value,id=document.getElementById("assessment-edit-id").value;if(!title||!/^\d{4}-\d{2}-\d{2}$/.test(dueDate)||Number.isNaN(new Date(dueDate+"T12:00:00").getTime()))return;const t={id:id||("task_"+Date.now()),title,subject,note,dueDate,done:!!assessmentTasks.find(x=>x.id===id)?.done};if(id)assessmentTasks=assessmentTasks.map(x=>x.id===id?t:x);else assessmentTasks.push(t);if(persistAssessmentTasks())closeAssessmentModal();}
+        function renderExamDdayWidget(){const host=document.getElementById("home-dday-list");if(!host)return;host.replaceChildren();const today=localDayKey();const all=[...(Array.isArray(neisSchedulesData)?neisSchedulesData:[]),...(Array.isArray(userCustomSchedules)?userCustomSchedules:[])].filter(s=>s&&/시험|고사|모의고사|수능|평가/.test(s.title||"")).filter(s=>(s.endDate||s.date)>=today).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,3);if(!all.length){const e=document.createElement("div");e.className="text-xs text-white/50";e.textContent="시험 일정이 등록되면 D-Day를 표시해요.";host.append(e);return;}all.forEach(s=>{const d=Math.round((new Date(s.date+"T12:00:00")-new Date(today+"T12:00:00"))/86400000);const row=document.createElement("div");row.className="liquid-glass pill flex justify-between px-3 py-2 text-sm";const title=document.createElement("span");title.textContent=s.title;const badge=document.createElement("b");badge.className="text-emerald-200";badge.textContent=d===0?"D-DAY":s.date<today?"진행 중":"D-"+d;row.append(title,badge);host.append(row);});}
+        async function saveTimetableImage() {
+            let entries = Array.isArray(dailyTimetableSchedules) ? [...dailyTimetableSchedules] : [];
+            if (!entries.length) {
+                entries = Array.from(document.querySelectorAll("#timetable-content > div")).map((el, i) => {
+                    const spans = el.querySelectorAll("span");
+                    return spans.length >= 2 ? { label: spans[0].textContent + " · ", title: spans[1].textContent, _order: i } : null;
+                }).filter(Boolean);
+            }
+            if (!entries.length && !(Array.isArray(todayMealMenuItems) && todayMealMenuItems.length)) { showCustomModal({ message: "저장할 시간표가 없습니다." }); return; }
+            entries = entries.map(entry => ({
+                ...entry,
+                isMeal: String(entry.title || "").startsWith("🍱"),
+                menuItems: String(entry.title || "").startsWith("🍱") && Array.isArray(todayMealMenuItems) ? todayMealMenuItems.filter(Boolean) : []
+            }));
+            if (todayMealMenuItems.length && !entries.some(entry => entry.isMeal)) entries.push({ label: "급식", title: "🍱 급식", isMeal: true, menuItems: todayMealMenuItems.filter(Boolean) });
+            entries.sort((a, b) => (Number(a.sh) || 0) * 60 + (Number(a.sm) || 0) - ((Number(b.sh) || 0) * 60 + (Number(b.sm) || 0)));
+
+            const canvas = document.createElement("canvas");
+            const width = 1080;
+            const ctx = canvas.getContext("2d");
+            if (!ctx) { showCustomModal({ message: "이미지 저장을 지원하는 브라우저가 아닙니다." }); return; }
+            if (document.fonts && document.fonts.ready) await Promise.race([document.fonts.ready, new Promise(resolve => setTimeout(resolve, 1000))]);
+            const menuFont = '17px "Gowun Dodum", sans-serif';
+            const lineHeight = 23;
+            const wrap = (text, maxWidth) => {
+                const words = String(text).split(/\s+/);
+                const lines = [];
+                let line = "";
+                words.forEach(word => {
+                    const candidate = line ? line + " " + word : word;
+                    if (line && ctx.measureText(candidate).width > maxWidth) { lines.push(line); line = word; }
+                    else line = candidate;
+                });
+                if (line) lines.push(line);
+                return lines.length ? lines : [""];
+            };
+            const rowLayouts = entries.map(entry => {
+                if (!entry.isMeal) return { entry, lines: [], height: 82 };
+                ctx.font = menuFont;
+                const source = entry.menuItems.length ? entry.menuItems : ["급식 메뉴를 불러오지 못했습니다."];
+                const lines = source.flatMap(item => wrap("· " + item, 430));
+                return { entry, lines, height: Math.max(112, 48 + lines.length * lineHeight) };
+            });
+            const headerHeight = 150;
+            canvas.width = width;
+            canvas.height = headerHeight + rowLayouts.reduce((sum, row) => sum + row.height, 0) + 32;
+            ctx.fillStyle = "#111827"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#f8fafc"; ctx.font = 'bold 34px "Gowun Dodum", sans-serif'; ctx.fillText("오늘의 시간표", 32, 52);
+            ctx.fillStyle = "#a5b4fc"; ctx.font = '19px "Gowun Dodum", sans-serif'; ctx.fillText(new Intl.DateTimeFormat("ko-KR", { dateStyle: "full" }).format(new Date()), 32, 88);
+
+            let y = 120;
+            rowLayouts.forEach((row, index) => {
+                const entry = row.entry;
+                const cardHeight = row.height - 10;
+                if (entry.isMeal) {
+                    ctx.fillStyle = "#183328"; ctx.beginPath(); ctx.roundRect(24, y, 445, cardHeight, 16); ctx.fill();
+                    ctx.fillStyle = "#0b1019"; ctx.beginPath(); ctx.roundRect(481, y, width - 505, cardHeight, 16); ctx.fill();
+                    ctx.fillStyle = "#a7f3d0"; ctx.font = 'bold 18px "Gowun Dodum", sans-serif';
+                    const timeText = entry.label || (String(entry.sh).padStart(2, "0") + ":" + String(entry.sm).padStart(2, "0") + "–" + String(entry.eh).padStart(2, "0") + ":" + String(entry.em));
+                    ctx.fillText(timeText, 42, y + 32, 405);
+                    ctx.fillStyle = "#f8fafc"; ctx.font = '22px "Gowun Dodum", sans-serif'; ctx.fillText(String(entry.title || "🍱 급식").replace(/^🍱\s*/, ""), 42, y + 68, 405);
+                    ctx.fillStyle = "#9ca3af"; ctx.font = 'bold 14px "Gowun Dodum", sans-serif'; ctx.fillText("오늘의 급식 메뉴", 500, y + 25);
+                    ctx.fillStyle = "#f3f4f6"; ctx.font = menuFont;
+                    row.lines.forEach((line, lineIndex) => ctx.fillText(line, 500, y + 49 + lineIndex * lineHeight, 530));
+                } else {
+                    ctx.fillStyle = index % 2 ? "#1f2937" : "#263247"; ctx.beginPath(); ctx.roundRect(24, y, width - 48, cardHeight, 16); ctx.fill();
+                    ctx.fillStyle = "#a5b4fc"; ctx.font = 'bold 18px "Gowun Dodum", sans-serif';
+                    const timeText = entry.label || (String(entry.sh).padStart(2, "0") + ":" + String(entry.sm).padStart(2, "0") + "–" + String(entry.eh).padStart(2, "0") + ":" + String(entry.em));
+                    ctx.fillText(timeText, 44, y + 40, 210);
+                    ctx.fillStyle = "#f8fafc"; ctx.font = '20px "Gowun Dodum", sans-serif'; ctx.fillText(String(entry.title || "일정").slice(0, 45), 280, y + 40, 745);
+                }
+                y += row.height;
+            });
+            canvas.toBlob(blob => {
+                if (!blob) { showCustomModal({ message: "시간표 이미지를 만들지 못했습니다." }); return; }
+                const url = URL.createObjectURL(blob);
+                const anchor = document.createElement("a");
+                anchor.href = url; anchor.download = "ADK-시간표-" + localDayKey() + ".png";
+                document.body.append(anchor); anchor.click(); anchor.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 1200);
+            }, "image/png");
+        }
+        function registerPwa(){if("serviceWorker"in navigator&&(location.protocol==="https:"||(location.hostname==="localhost"||location.hostname==="127.0.0.1")))navigator.serviceWorker.register("./service-worker.js").catch(console.warn);}
+        function readDataCache(key,maxAge){try{const v=JSON.parse(localStorage.getItem(key)||"null");return v&&v.savedAt&&Date.now()-v.savedAt<=maxAge?v:null;}catch(_){return null;}}
+        async function fetchCachedJson(url,key,validate,maxAge){try{const r=await fetch(url);if(!r.ok)throw Error("HTTP "+r.status);const data=await r.json();if(!validate(data))throw Error("유효하지 않은 API 응답");const v={savedAt:Date.now(),data};try{localStorage.setItem(key,JSON.stringify(v));}catch(e){console.warn("오프라인 저장 실패",e);}return{data,offline:false,savedAt:v.savedAt};}catch(e){const v=readDataCache(key,maxAge);if(v)return{data:v.data,offline:true,savedAt:v.savedAt};throw e;}}
+        function offlineNote(result){if(!result||!result.offline)return "";const d=new Date(result.savedAt);return '<div class="text-[11px] text-amber-200/75 mt-2">오프라인 저장 정보 · '+(d.getMonth()+1)+'/'+d.getDate()+'</div>';}
         function setTheme(theme) {
             const selectedTheme = theme === 'light' ? 'light' : 'dark';
             document.documentElement.dataset.theme = selectedTheme;
@@ -754,6 +871,7 @@
         }
         document.addEventListener('DOMContentLoaded', () => {
             setTheme(document.documentElement.dataset.theme || 'dark');
+            registerPwa(); renderAssessmentTasks(); renderExamDdayWidget();
             document.querySelectorAll('[data-theme-choice]').forEach(button => button.addEventListener('click', () => setTheme(button.dataset.themeChoice)));
             const classSelect = document.getElementById('input-class');
             for(let i=1; i<=12; i++) classSelect.innerHTML += `<option value="${i}" class="text-black">${i}반</option>`;
@@ -1071,7 +1189,9 @@
             });
             let layout = {};
             try { layout = JSON.parse(localStorage.getItem(HOME_WIDGETS_KEY) || '{}') || {}; } catch(error) { layout = {}; }
+            const hasSavedLayout = Array.isArray(layout.order) || Array.isArray(layout.hidden);
             const hidden = new Set(Array.isArray(layout.hidden) ? layout.hidden : []);
+            if(!hasSavedLayout) hidden.add('widget-1');
             widgets.forEach(widget => {
                 const isHidden = hidden.has(widget.dataset.homeWidgetId);
                 widget.hidden = isHidden;
@@ -1081,6 +1201,11 @@
             if(Array.isArray(layout.order)) {
                 const rank = new Map(layout.order.map((id, index) => [id, index]));
                 widgets.sort((a, b) => (rank.get(a.dataset.homeWidgetId) ?? 999) - (rank.get(b.dataset.homeWidgetId) ?? 999));
+                widgets.forEach(widget => home.appendChild(widget));
+            } else {
+                const defaultOrder = ['widget-2', 'widget-5', 'widget-4', 'widget-3', 'widget-6', 'widget-1'];
+                const rank = new Map(defaultOrder.map((id, index) => [id, index]));
+                widgets.sort((a, b) => rank.get(a.dataset.homeWidgetId) - rank.get(b.dataset.homeWidgetId));
                 widgets.forEach(widget => home.appendChild(widget));
             }
             homeWidgetsReady = true;
@@ -1796,8 +1921,8 @@
         async function fetchWeatherData(query) {
             try {
                 const url = `https://api.openweathermap.org/data/2.5/weather?${query}&appid=${OPENWEATHER_API_KEY}&units=metric&lang=kr`;
-                const res = await fetch(url);
-                const data = await res.json();
+                const result = await fetchCachedJson(url, "adk_weather_"+String(query).replace(/[^a-z0-9]/gi,"_"), v=>v&&v.cod===200&&v.main&&Array.isArray(v.weather), 86400000); const data=result.data;
+
                 
                 if (data.cod === 200) {
                     const temp = Math.round(data.main.temp);
@@ -1844,8 +1969,8 @@
 
                 const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${regionCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_YMD=${ymd}`;
                 
-                const res = await fetch(url);
-                const data = await res.json();
+                const result = await fetchCachedJson(url, "adk_meal_"+regionCode+"_"+schoolCode+"_"+ymd, v=>!!(v&&(v.mealServiceDietInfo||v.RESULT?.CODE==="INFO-200")), 259200000); const data=result.data;
+
                 
                 detectedAllergiesInMeal = [];
 
@@ -1906,16 +2031,16 @@
                         displayHtml += `<div>${itemHtml}</div>`;
                     });
                     
-                    document.getElementById('meal-content').innerHTML = displayHtml;
-                    todayMealBriefData = briefMealNames.join(', ');
+                    document.getElementById('meal-content').innerHTML = displayHtml + offlineNote(result);
+                    todayMealMenuItems = briefMealNames.filter(Boolean); todayMealBriefData = todayMealMenuItems.join(", "); renderTimelineSchedules(new Date());
                 } else {
                     document.getElementById('meal-content').innerHTML = '<div class="text-white/50">급식 정보가 없습니다.😢</div>';
-                    todayMealBriefData = '';
+                    todayMealMenuItems = []; todayMealBriefData = ''; renderTimelineSchedules(new Date());
                 }
             } catch(e) {
                 console.error(e);
                 document.getElementById('meal-content').innerHTML = '<div class="text-white/50">NEIS에서 급식 정보를 불러오지 못했습니다.😢</div>';
-                todayMealBriefData = '';
+                todayMealMenuItems = []; todayMealBriefData = ''; renderTimelineSchedules(new Date());
             }
         }
 
@@ -1938,8 +2063,8 @@
 
                 const url = `https://open.neis.go.kr/hub/SchoolSchedule?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${regionCode}&SD_SCHUL_CODE=${schoolCode}&AA_FROM_YMD=${fromYmd}&AA_TO_YMD=${toYmd}&pSize=1000`;
                 
-                const res = await fetch(url);
-                const data = await res.json();
+                const result = await fetchCachedJson(url, "adk_schedules_"+regionCode+"_"+schoolCode, v=>!!(v&&(v.SchoolSchedule||v.RESULT?.CODE==="INFO-200")), 2592000000); const data=result.data;
+
                 const list = document.getElementById('home-schedule-list');
                 
                 if (data.SchoolSchedule && data.SchoolSchedule[1] && data.SchoolSchedule[1].row) {
@@ -2000,7 +2125,7 @@
                     }
                     
                     list.innerHTML = html || '<li class="text-white/50">다가오는 특별한 일정이 없습니다.</li>';
-                    renderCalendarSchedules();
+                    renderCalendarSchedules(); renderExamDdayWidget(); if(result.offline) list.insertAdjacentHTML("beforeend","<li>"+offlineNote(result)+"</li>");
                 } else {
                     list.innerHTML = '<li class="text-white/50">NEIS에 등록된 학사일정이 없습니다.</li>';
                 }
@@ -2023,8 +2148,8 @@
             const url = `https://open.neis.go.kr/hub/hisTimetable?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${regionCode}&SD_SCHUL_CODE=${schoolCode}&ALL_TI_YMD=${ymd}&GRADE=${config.grade}&CLASS_NM=${config.class}`;
             
             try {
-                const res = await fetch(url);
-                const data = await res.json();
+                const result = await fetchCachedJson(url, "adk_timetable_"+regionCode+"_"+schoolCode+"_"+config.grade+"_"+config.class+"_"+ymd, v=>!!(v&&(v.hisTimetable||v.RESULT?.CODE==="INFO-200")), 1209600000); const data=result.data;
+
                 const container = document.getElementById('timetable-content');
                 dailyTimetableSchedules = []; 
                 
@@ -2071,7 +2196,7 @@
                         }
                     });
 
-                    container.innerHTML = html;
+                    container.innerHTML = html + offlineNote(result);
                 } else {
                     container.innerHTML = '<div class="col-span-2 text-white/50 text-center py-2">NEIS에 오늘 등록된 시간표가 없습니다.</div>';
                 }
@@ -2294,24 +2419,78 @@
         }
 
         function addEventToTimeline(startH, startM, endH, endM, title, colorClass, id, isCustom) {
-            const slot = document.querySelector(`.time-slot[data-hour="${startH}"]`);
-            if(!slot) return;
-            
+            const slot = document.querySelector('.time-slot[data-hour="' + startH + '"]');
+            if (!slot) return;
+            const isMeal = String(title).startsWith('🍱');
             const totalMinutes = (endH * 60 + endM) - (startH * 60 + startM);
-            const height = Math.max(10, totalMinutes - 2); 
-            
+            const height = Math.max(10, totalMinutes - 2);
             const eventEl = document.createElement('div');
-            eventEl.className = `timeline-event ${colorClass} text-white font-medium shadow-md flex items-center`;
-            eventEl.style.height = `${height}px`;
-            eventEl.style.top = `${startM + 1}px`;
-            eventEl.innerHTML = `<span class="drop-shadow-sm line-clamp-2 text-xs w-full">${title}</span>`;
-            
-            if (isCustom) {
-                eventEl.onclick = () => { openScheduleModal(selectedModalDate, id); };
+            eventEl.className = 'timeline-event ' + colorClass + ' text-white font-medium shadow-md flex items-center' + (isMeal ? ' timeline-meal-event' : '');
+            eventEl.style.height = height + 'px';
+            eventEl.style.top = (startM + 1) + 'px';
+
+            if (isMeal) {
+                const main = document.createElement('div');
+                main.className = 'timeline-meal-main';
+                const mealTitle = document.createElement('span');
+                mealTitle.className = 'drop-shadow-sm line-clamp-2 text-xs font-semibold';
+                mealTitle.textContent = String(title).replace(/^🍱\s*/, '');
+                main.appendChild(mealTitle);
+
+                const menu = document.createElement('div');
+                menu.className = 'timeline-meal-menu';
+                menu.setAttribute('aria-label', '오늘 급식 메뉴');
+                const menuTitle = document.createElement('span');
+                menuTitle.className = 'timeline-meal-menu-title';
+                menuTitle.textContent = '오늘의 메뉴';
+                menu.appendChild(menuTitle);
+                const items = Array.isArray(todayMealMenuItems) ? todayMealMenuItems.filter(Boolean) : [];
+                const naturalWidth = Math.max(1, (slot.parentElement ? slot.parentElement.clientWidth : 320) - 20);
+                const scrollArea = eventEl.closest('.timeline-scroll-wrapper');
+                const visibleRight = scrollArea ? scrollArea.getBoundingClientRect().right - 10 : window.innerWidth - 10;
+                const eventLeft = slot.getBoundingClientRect().left + 10;
+                const rightSpace = Math.max(1, visibleRight - eventLeft);
+                const rowWidth = Math.max(1, Math.min(naturalWidth, rightSpace));
+                const rowsPerColumn = Math.max(1, Math.floor((height - 28) / 15));
+                const columns = Math.max(1, Math.ceil(Math.max(1, items.length) / rowsPerColumn));
+                const longestLabelWidth = items.reduce((widest, item) => Math.max(widest, String(item).length * 9 + 24), 138);
+                const columnWidth = Math.max(76, Math.min(240, longestLabelWidth));
+                const requestedMenuWidth = Math.max(138, rowWidth * 0.61 - 6, columns * columnWidth + Math.max(0, columns - 1) * 8 + 20);
+                const mainRatio = requestedMenuWidth > rightSpace * 0.61 ? 0.3 : 0.39;
+                const menuWidth = Math.max(76, Math.min(requestedMenuWidth, rightSpace - rowWidth * mainRatio - 6));
+                const fittedColumnWidth = Math.max(48, Math.min(columnWidth, (menuWidth - 20 - Math.max(0, columns - 1) * 8) / columns));
+                eventEl.style.width = rowWidth + 'px';
+                eventEl.style.right = 'auto';
+                eventEl.style.zIndex = '8';
+                main.style.flexBasis = (mainRatio * 100) + '%';
+                menu.style.width = menuWidth + 'px';
+                menu.style.flexBasis = menuWidth + 'px';
+                const list = document.createElement('div');
+                list.className = 'timeline-meal-menu-list';
+                list.style.gridTemplateRows = 'repeat(' + rowsPerColumn + ', minmax(0, 1fr))';
+                list.style.gridAutoColumns = fittedColumnWidth + 'px';
+                if (items.length) {
+                    items.forEach(item => {
+                        const line = document.createElement('span');
+                        line.className = 'timeline-meal-menu-item';
+                        line.textContent = '· ' + item;
+                        line.title = item;
+                        list.appendChild(line);
+                    });
+                } else {
+                    const empty = document.createElement('span');
+                    empty.className = 'timeline-meal-menu-item timeline-meal-empty';
+                    empty.textContent = '급식 메뉴를 불러오는 중입니다.';
+                    list.appendChild(empty);
+                }
+                menu.appendChild(list);
+                eventEl.append(main, menu);
+            } else {
+                eventEl.innerHTML = '<span class="drop-shadow-sm line-clamp-2 text-xs w-full">' + title + '</span>';
             }
+            if (isCustom) eventEl.onclick = () => { openScheduleModal(selectedModalDate, id); };
             slot.appendChild(eventEl);
         }
-
         // --- 캘린더 기능 ---
         function initCalendar() {
             const now = new Date();
@@ -2531,6 +2710,7 @@
             document.getElementById('modal-add-title').textContent = "새 스케줄 추가";
             renderModalScheduleList();
             updateBrief(); // 일정 추가/변경 시 브리프 즉각 업데이트 시도
+            renderExamDdayWidget();
         }
     </script>
 </body>
