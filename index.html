@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="light only">
     <meta name="supported-color-schemes" content="light">
     <meta name="theme-color" content="#111827"><link rel="manifest" href="./manifest.json"><link rel="icon" href="./icon.svg" type="image/svg+xml">
@@ -733,6 +733,7 @@
         }
         function escapeHTML(value) { return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
         function safeStoredArray(key, validate) { try { const value = JSON.parse(localStorage.getItem(key) || '[]'); return Array.isArray(value) ? value.filter(validate) : []; } catch (_) { return []; } }
+        function readUserConfig() { try { const value = JSON.parse(localStorage.getItem('userConfig') || 'null'); return value && typeof value === 'object' && !Array.isArray(value) ? value : null; } catch (_) { return null; } }
         let userCustomSchedules = safeStoredArray('userCustomSchedules', x => x && typeof x.id === 'string' && typeof x.title === 'string' && x.title.length <= 160 && isValidISODate(x.date) && isValidISODate(x.endDate || x.date) && (x.endDate || x.date) >= x.date);
         let neisSchedulesData = safeStoredArray('neisSchedules', x => x && typeof x.title === 'string' && x.title.length <= 300 && isValidISODate(x.date) && isValidISODate(x.endDate || x.date) && (x.endDate || x.date) >= x.date);
         let dailyTimetableSchedules = [];
@@ -918,7 +919,7 @@
         }
         let timetableEditMode = false;
         function readTimetableOverrides() { try { const value=JSON.parse(localStorage.getItem('customTimetableOverrides')||'{}'); return value&&typeof value==='object'&&!Array.isArray(value)?value:{}; } catch (_) { return {}; } }
-        function timetableOverrideKey(period, config=null) { let user=config; if(!user) { try { user=JSON.parse(localStorage.getItem('userConfig')||'null'); } catch (_) {} } return `${user?.regionCode||DEFAULT_REGION_CODE}:${user?.schoolCode||DEFAULT_SCHOOL_CODE}:${user?.grade||''}:${user?.class||''}:${new Date().getDay()}:${period}`; }
+        function timetableOverrideKey(period, config=null) { const user=config || readUserConfig(); return `${user?.regionCode||DEFAULT_REGION_CODE}:${user?.schoolCode||DEFAULT_SCHOOL_CODE}:${user?.grade||''}:${user?.class||''}:${new Date().getDay()}:${period}`; }
         function toggleTimetableEditMode() {
             timetableEditMode=!timetableEditMode;
             const button=document.getElementById('timetable-action-edit'); const content=document.getElementById('timetable-content'); const title=document.getElementById('timetable-title');
@@ -1149,9 +1150,8 @@
         function showInitialLoading() { document.getElementById('initial-loading-overlay')?.classList.remove('hidden'); }
         function hideInitialLoading() { document.getElementById('initial-loading-overlay')?.classList.add('hidden'); if(!document.getElementById('tab-home')?.classList.contains('hidden')) showHomeEditHint(); }
         async function checkUserConfig() {
-            const config = localStorage.getItem('userConfig');
-            if (config) {
-                const userData = JSON.parse(config);
+            const userData = readUserConfig();
+            if (userData) {
                 showInitialLoading();
                 applyUserData(userData);
                 showMainApp();
@@ -1714,7 +1714,7 @@
         }
 
         function editSetting(type) {
-            const userData = JSON.parse(localStorage.getItem('userConfig'));
+            const userData = readUserConfig();
             if(type === 'name') {
                 showCustomModal({
                     title: "이름 수정",
@@ -1749,7 +1749,7 @@
         }
 
         function editAllergySetting() {
-            const userData = JSON.parse(localStorage.getItem('userConfig'));
+            const userData = readUserConfig();
             const userAllergies = userData.allergies || [];
             
             const list = document.getElementById('allergy-checkbox-list');
@@ -1786,7 +1786,7 @@
         }
 
         async function saveAllergyModal() {
-            const userData = JSON.parse(localStorage.getItem('userConfig'));
+            const userData = readUserConfig();
             const checkboxes = document.querySelectorAll('.allergy-cb:checked');
             let newAllergies = [];
             checkboxes.forEach(cb => newAllergies.push(parseInt(cb.value)));
@@ -2282,27 +2282,39 @@
                 
                 if (data.cod === 200) {
                     const temp = Math.round(data.main.temp);
-                    const desc = data.weather[0].description;
-                    const icon = data.weather[0].icon;
-                    const cityName = data.name; // API가 반환한 GPS 기반 실제 동네/도시 이름
+                    const weatherItem = data.weather[0] || {};
+                    const desc = String(weatherItem.description || '날씨 정보');
+                    const icon = /^\d{2}[dn]$/.test(String(weatherItem.icon || '')) ? weatherItem.icon : '01d';
+                    const cityName = String(data.name || '알 수 없음');
                     
                     document.getElementById('weather-location').textContent = cityName;
-                    document.getElementById('weather-content').innerHTML = `
-                        <img src="https://openweathermap.org/img/wn/${icon}.png" alt="weather" class="w-10 h-10">
-                        <div>
-                            <div class="text-2xl font-bold">${temp}°C</div>
-                            <div class="text-sm text-white/70">${desc}</div>
-                        </div>
-                    `;
+                    const weatherContent = document.getElementById('weather-content');
+                    weatherContent.replaceChildren();
+                    weatherContent.removeAttribute('aria-label');
+                    const weatherIcon = document.createElement('img');
+                    weatherIcon.src = `https://openweathermap.org/img/wn/${icon}.png`;
+                    weatherIcon.alt = `${desc} 날씨 아이콘`;
+                    weatherIcon.className = 'w-10 h-10';
+                    const weatherDetails = document.createElement('div');
+                    const temperature = document.createElement('div');
+                    temperature.className = 'text-2xl font-bold';
+                    temperature.textContent = `${temp}°C`;
+                    const description = document.createElement('div');
+                    description.className = 'text-sm text-white/70';
+                    description.textContent = desc;
+                    weatherDetails.append(temperature, description);
+                    weatherContent.append(weatherIcon, weatherDetails);
                     
                     // 브리프용 날씨 데이터 업데이트
                     weatherBriefData.temp = temp;
-                    weatherBriefData.condition = data.weather[0].main.toLowerCase();
+                    weatherBriefData.condition = String(weatherItem.main || '').toLowerCase();
                     weatherBriefData.isRain = weatherBriefData.condition.includes('rain') || desc.includes('비');
 
                 } else {
                     document.getElementById('weather-location').textContent = '알 수 없음';
-                    document.getElementById('weather-content').innerHTML = '<div class="text-sm text-white/50">날씨 정보를 가져올 수 없습니다.</div>';
+                    const weatherContent = document.getElementById('weather-content');
+                    weatherContent.replaceChildren();
+                    const unavailable = document.createElement('div'); unavailable.className = 'text-sm text-white/50'; unavailable.textContent = '날씨 정보를 가져올 수 없습니다.'; weatherContent.appendChild(unavailable);
                     weatherBriefData = { temp: 0, condition: '', isRain: false };
                 }
             } catch(e) {
@@ -2318,7 +2330,7 @@
                 const today = new Date();
                 const ymd = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
                 
-                const config = JSON.parse(localStorage.getItem('userConfig'));
+                const config = readUserConfig();
                 const regionCode = config ? config.regionCode : DEFAULT_REGION_CODE;
                 const schoolCode = config ? config.schoolCode : DEFAULT_SCHOOL_CODE;
                 const userAllergies = config && config.allergies ? config.allergies : [];
@@ -2340,25 +2352,18 @@
                     let briefMealNames = [];
 
                     rawItems.forEach(item => {
-                        // 요약용 메뉴 이름 추출 (알러지 숫자 및 괄호 제거)
-                        let textPart = item.replace(/[0-9]+\./g, '').replace(/\([^)]*\)/g, '').replace(/[^가-힣a-zA-Z0-9\s]/g, '').trim();
+                        // NEIS 알레르기 표기는 메뉴 끝의 괄호 안 숫자 목록만 인식한다.
+                        // 메뉴명 속 2.5% 등 숫자를 알레르기 번호로 오인하지 않는다.
+                        const allergyMatch = item.match(/\(([^()]*)\)\s*$/);
+                        const allergyPayload = allergyMatch?.[1]?.trim() || '';
+                        const hasValidAllergySuffix = /^\d+(?:\.\d+)*\.?$/.test(allergyPayload)
+                            && allergyPayload.split('.').filter(Boolean).every(value => Number(value) >= 1 && Number(value) <= 19);
+                        const nums = hasValidAllergySuffix
+                            ? [...new Set(allergyPayload.split('.').filter(Boolean).map(Number).filter(n => n >= 1 && n <= 19))]
+                            : [];
+                        const menuName = hasValidAllergySuffix ? item.slice(0, allergyMatch.index).trim() : item.trim();
+                        const textPart = menuName.replace(/\([^)]*\)/g, '').replace(/[^가-힣a-zA-Z0-9\s]/g, '').trim();
                         briefMealNames.push(textPart);
-
-                        // 알러지 번호 추출
-                        let nums = [];
-                        const regex = /([0-9]+)\./g; 
-                        let match;
-                        while ((match = regex.exec(item)) !== null) {
-                            nums.push(parseInt(match[1]));
-                        }
-                        
-                        const parenMatch = item.match(/\((.*?)\)/);
-                        if(parenMatch) {
-                           const pNums = parenMatch[1].match(/[0-9]+/g);
-                           if(pNums) pNums.forEach(n => nums.push(parseInt(n)));
-                        }
-                        
-                        nums = [...new Set(nums)]; 
                         
                         // 사용자 알러지 감지
                         let hasWarning = false;
@@ -2376,14 +2381,11 @@
 
                         // 화면 출력용 HTML 작성 (사용자 등록 알러지 번호는 빨간색 하이라이트)
                         let itemHtml = escapeHTML(item);
-                        if (userAllergies.length > 0) {
-                            itemHtml = itemHtml.replace(/([0-9]+)(\.)/g, (m, p1, p2) => {
-                                const num = parseInt(p1);
-                                if (userAllergies.includes(num)) {
-                                    return `<span class="text-red-500 font-bold">${p1}</span>${p2}`;
-                                }
-                                return m;
-                            });
+                        if (hasValidAllergySuffix && userAllergies.length > 0) {
+                            const highlightedSuffix = nums.map(num => userAllergies.includes(num)
+                                ? `<span class="text-red-500 font-bold">${num}</span>`
+                                : String(num)).join('.');
+                            itemHtml = `${escapeHTML(menuName)} (${highlightedSuffix}${allergyPayload.endsWith('.') ? '.' : ''})`;
                         }
 
                         displayHtml += `<div>${itemHtml}</div>`;
@@ -2416,7 +2418,7 @@
                 toDate.setFullYear(today.getFullYear() + 1);
                 const toYmd = `${toDate.getFullYear()}${String(toDate.getMonth() + 1).padStart(2, '0')}${String(toDate.getDate()).padStart(2, '0')}`;
 
-                const config = JSON.parse(localStorage.getItem('userConfig'));
+                const config = readUserConfig();
                 const regionCode = config ? config.regionCode : DEFAULT_REGION_CODE;
                 const schoolCode = config ? config.schoolCode : DEFAULT_SCHOOL_CODE;
 
@@ -2496,7 +2498,7 @@
 
         async function fetchNeisSchedules() { return withRegionLoading("home-schedule-list","학사일정을 불러오는 중...",()=>fetchNeisSchedulesRequest()); }
         async function fetchNeisTimetableRequest() {
-            let config = null; try { config = JSON.parse(localStorage.getItem('userConfig') || 'null'); } catch(error) { console.warn('저장된 학교 설정을 읽지 못했습니다.', error); }
+            const config = readUserConfig();
             if (!config || typeof config !== 'object') return;
             
             const today = new Date();
@@ -2589,7 +2591,7 @@
             let briefText = "";
 
             // 사용자 이름 추출
-            const config = JSON.parse(localStorage.getItem('userConfig'));
+            const config = readUserConfig();
             const userName = config && config.name ? config.name : '사용자';
 
             // 교시 정보만 필터링 (급식 등 제외)
@@ -2876,11 +2878,27 @@
         function initCalendar() {
             const now = new Date();
             const scrollArea = document.getElementById('calendar-scroll-area');
-            scrollArea.innerHTML = '';
+            const months = [];
             for(let i = -12; i <= 12; i++) {
                 let d = new Date(now.getFullYear(), now.getMonth() + i, 1);
-                scrollArea.innerHTML += generateMonthHTML(d.getFullYear(), d.getMonth(), `cal-month-${d.getFullYear()}-${d.getMonth()}`);
+                months.push(generateMonthHTML(d.getFullYear(), d.getMonth(), `cal-month-${d.getFullYear()}-${d.getMonth()}`));
             }
+            scrollArea.innerHTML = months.join('');
+            scrollArea.onclick = event => {
+                const pill = event.target.closest('.cal-pill[data-action]');
+                if(pill) {
+                    event.stopPropagation();
+                    if(pill.dataset.action === 'neis') showCustomModal({title: '학사일정', message: pill.dataset.title || ''});
+                    else if(pill.dataset.action === 'custom') openScheduleModal(new Date(`${pill.dataset.date}T12:00:00`), pill.dataset.scheduleId || null);
+                    return;
+                }
+                const day = event.target.closest('.cal-day[data-date]');
+                if(day) handleDayClick(day.dataset.date);
+            };
+            scrollArea.onkeydown = event => {
+                if((event.key === 'Enter' || event.key === ' ') && event.target.matches('.cal-pill[data-action]')) { event.preventDefault(); event.target.click(); }
+                else if((event.key === 'Enter' || event.key === ' ') && event.target.matches('.cal-day[data-date]')) { event.preventDefault(); handleDayClick(event.target.dataset.date); }
+            };
             renderCalendarSchedules();
         }
 
@@ -2897,7 +2915,7 @@
             for(let i = 1; i <= daysInMonth; i++) {
                 let isToday = (y === now.getFullYear() && m === now.getMonth() && i === now.getDate());
                 let fullDate = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-                html += `<div class="cal-day ${isToday ? 'today' : ''}" data-date="${fullDate}" onclick="handleDayClick('${fullDate}')">
+                html += `<div class="cal-day ${isToday ? 'today' : ''}" data-date="${fullDate}" role="button" tabindex="0" aria-label="${y}년 ${m+1}월 ${i}일 일정 보기">
                             <span class="z-10">${i}</span>
                             <div class="cal-event-container z-0"></div>
                          </div>`;
@@ -2932,7 +2950,7 @@
         function scrollToToday() { scrollToCurrentMonth(); }
 
         function renderCalendarSchedules() {
-            document.querySelectorAll('.cal-event-container').forEach(el => el.innerHTML = '');
+            document.querySelectorAll('.cal-event-container').forEach(el => el.replaceChildren());
 
             const allSchedules = [...neisSchedulesData, ...userCustomSchedules].map((schedule, index) => ({
                 ...schedule,
@@ -2981,6 +2999,7 @@
                 dayEl.classList.toggle('has-multiple-events', entries.length > 1);
                 dayEl.classList.toggle('has-overflow-events', entries.length > 2);
 
+                const pills = document.createDocumentFragment();
                 entries.slice(0, 2).forEach(({ schedule }) => {
                     const isStart = dateStr === schedule.date;
                     const isEnd = dateStr === schedule.endDate;
@@ -2992,16 +3011,24 @@
                     else if(isEnd) pillClass += ' end';
                     else pillClass += ' mid';
 
-                    const clickAction = schedule.isNeis
-                        ? `event.stopPropagation(); showCustomModal({title: "학사일정", message: ${JSON.stringify(String(schedule.title)).replace(/&/g, "\\u0026").replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/'/g, "\\u0027")}})`
-                        : `event.stopPropagation(); openScheduleModal(new Date(${JSON.stringify(dateStr)}), ${JSON.stringify(String(schedule.id || ''))})`;
-                    container.innerHTML += `<div class="${pillClass}" onclick='${clickAction}'>${isStart ? escapeHTML(schedule.title) : '&nbsp;'}</div>`;
+                    const pill = document.createElement('div');
+                    pill.className = pillClass;
+                    pill.dataset.action = schedule.isNeis ? 'neis' : 'custom';
+                    pill.dataset.title = String(schedule.title || '');
+                    pill.dataset.date = dateStr;
+                    pill.dataset.scheduleId = String(schedule.id || '');
+                    pill.textContent = isStart ? String(schedule.title || '') : '\u00a0';
+                    pill.setAttribute('role', 'button');
+                    pill.tabIndex = 0;
+                    pill.setAttribute('aria-label', `${schedule.isNeis ? '학사일정' : '일정'}: ${String(schedule.title || '')}`);
+                    pills.appendChild(pill);
                 });
 
                 const overflowCount = entries.length - 2;
                 if(overflowCount > 0) {
-                    container.innerHTML += `<div class="cal-pill cal-pill-more single" aria-label="추가 일정 ${overflowCount}개">+${overflowCount}</div>`;
+                    const more = document.createElement('div'); more.className = 'cal-pill cal-pill-more single'; more.setAttribute('aria-label', `추가 일정 ${overflowCount}개`); more.textContent = `+${overflowCount}`; pills.appendChild(more);
                 }
+                container.appendChild(pills);
             });
         }
         function handleDayClick(dateStr) { openScheduleModal(new Date(dateStr)); }
@@ -3080,7 +3107,7 @@
             const dateStr = formatDate(selectedModalDate);
             if(!isValidISODate(dateStr) || !isValidISODate(endDateStr)) { showCustomModal({message: '올바른 날짜를 선택해주세요.'}); return; }
             if(!Number.isInteger(start) || start < 0 || start > 23 || !Number.isInteger(end) || end < 1 || end > 24) { showCustomModal({message: '시작 및 종료 시간을 확인해주세요.'}); return; }
-            if(endDateStr < dateStr) { showCustomModal({message: '종료 날짜는 시작 날짜보다 빠를 수 정 없습니다.'}); return; }
+            if(endDateStr < dateStr) { showCustomModal({message: '종료 날짜는 시작 날짜보다 빠를 수 없습니다.'}); return; }
             if(dateStr === endDateStr && start >= end) { showCustomModal({message: '종료 시간은 시작 시간보다 늦어야 합니다.'}); return; }
             
             if(editId) {
