@@ -253,7 +253,9 @@
         #timetable-actions .home-edit-tool svg { width: 20px; height: 20px; }
         #timetable-actions button[aria-pressed="true"] { background: rgba(255,255,255,.25); box-shadow: inset 0 1px 2px rgba(255,255,255,.18), 0 4px 14px rgba(0,0,0,.2); }
         #timetable-share-menu { position: fixed; top: calc(max(24px, env(safe-area-inset-top)) + 54px); right: 24px; z-index: 60; width: min(220px, calc(100vw - 48px)); }
-        .timetable-share-menu-item { display: block; width: 100%; padding: 11px 14px; border-radius: 12px; color: white; text-align: left; font-size: .875rem; }
+        .timetable-share-menu-item { display: flex; align-items: center; gap: 11px; width: 100%; padding: 11px 14px; border-radius: 12px; color: white; text-align: left; font-size: .875rem; transition: background-color .2s ease, transform .2s ease; }
+        .timetable-share-menu-item svg { width: 18px; height: 18px; flex: 0 0 18px; opacity: .88; }
+        .timetable-share-menu-item:active { transform: scale(.98); }
         .timetable-share-menu-item:hover { background: rgba(255,255,255,.1); }
         :root[data-theme="light"] .timetable-share-menu-item { color: #202b3d; }
         :root[data-theme="light"] .timetable-share-menu-item:hover { background: rgba(45,60,82,.08); }
@@ -321,6 +323,21 @@
         .initial-loading-overlay { position: fixed; inset: 0; z-index: 180; place-items: center; padding: 0; background: transparent; }
         .initial-loading-overlay:not(.hidden) { display: grid; }
         @media (prefers-reduced-motion: reduce) { .region-loader-dots, .region-loader-dot { animation: none; } }
+        .ui-checkbox { appearance: none; -webkit-appearance: none; width: 18px; height: 18px; flex: 0 0 18px; margin: 0; border: 1px solid rgba(255,255,255,.34); border-radius: 6px; background: rgba(255,255,255,.07); display: inline-grid; place-content: center; cursor: pointer; transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
+        .ui-checkbox:checked { border-color: rgba(110,231,183,.9); background-color: rgba(16,185,129,.78); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m3 8 3.2 3.2L13 4.5' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-position: center; background-repeat: no-repeat; background-size: 13px; box-shadow: 0 0 0 2px rgba(16,185,129,.12), inset 0 1px 1px rgba(255,255,255,.2); }
+        .ui-checkbox:active { transform: scale(.9); }
+        .ui-checkbox:focus-visible { outline: 2px solid rgba(110,231,183,.75); outline-offset: 3px; }
+        .check-option { display: flex; align-items: center; gap: 9px; min-height: 38px; padding: 7px 11px; border: 1px solid rgba(255,255,255,.11); border-radius: 9999px; background: rgba(255,255,255,.045); color: rgba(255,255,255,.88); cursor: pointer; transition: background-color .2s ease, border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
+        .check-option:hover { background: rgba(255,255,255,.09); border-color: rgba(255,255,255,.2); }
+        .check-option.is-selected { border-color: rgba(110,231,183,.35); background: rgba(16,185,129,.1); box-shadow: inset 0 1px 5px rgba(16,185,129,.06); }
+        .check-option:active { transform: scale(.985); }
+        .preference-option { font-size: .82rem; line-height: 1.35; }
+        .allergy-option { min-height: 40px; border-radius: 14px; padding: 7px 9px; font-size: .82rem; }
+        :root[data-theme="light"] .check-option { color: #263247; border-color: rgba(45,60,82,.13); background: rgba(255,255,255,.48); }
+        :root[data-theme="light"] .check-option:hover { background: rgba(255,255,255,.8); border-color: rgba(45,60,82,.22); }
+        :root[data-theme="light"] .check-option.is-selected { border-color: rgba(5,150,105,.32); background: rgba(16,185,129,.1); }
+        :root[data-theme="light"] .ui-checkbox { border-color: rgba(45,60,82,.3); background-color: rgba(255,255,255,.8); }
+        :root[data-theme="light"] .ui-checkbox:checked { border-color: #059669; background-color: #059669; }
     </style>
     <script>
         try { const initialTheme = localStorage.getItem('adkTheme') === 'light' ? 'light' : 'dark'; document.documentElement.dataset.theme = initialTheme; } catch (error) {}
@@ -482,9 +499,9 @@
                 <button type="button" id="timetable-share-toggle" class="home-edit-tool liquid-glass pill timetable-action-share" onclick="toggleTimetableShareMenu()" aria-label="시간표 공유 및 내보내기" title="공유 및 내보내기" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.6 6.6-4.2M8.7 13.4l6.6 4.2"/></svg></button>
             </div>
             <div id="timetable-share-menu" class="liquid-glass card p-2 hidden" role="menu" aria-label="시간표 공유 및 저장">
-                <button type="button" class="timetable-share-menu-item" role="menuitem" onclick="closeTimetableShareMenu();copyTimetableText()">텍스트 복사</button>
-                <button type="button" class="timetable-share-menu-item" role="menuitem" onclick="closeTimetableShareMenu();saveTimetableImage()">이미지 저장</button>
-                <button type="button" class="timetable-share-menu-item" role="menuitem" onclick="closeTimetableShareMenu();shareTimetableImage()">이미지 공유</button>
+                <button type="button" class="timetable-share-menu-item" role="menuitem" onclick="closeTimetableShareMenu();copyTimetableText()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h2"/></svg><span>텍스트 복사</span></button>
+                <button type="button" class="timetable-share-menu-item" role="menuitem" onclick="closeTimetableShareMenu();saveTimetableImage()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v11m0 0 4-4m-4 4-4-4"/><path d="M5 15v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg><span>이미지 저장</span></button>
+                <button type="button" class="timetable-share-menu-item" role="menuitem" onclick="closeTimetableShareMenu();shareTimetableImage()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.6 6.6-4.2M8.7 13.4l6.6 4.2"/></svg><span>이미지 공유</span></button>
             </div>
             
             <div class="liquid-glass card p-2 flex-1 overflow-hidden anim-box d-1 mb-8">
@@ -549,8 +566,8 @@
                         <div class="font-medium">일일 스케줄 공유 항목</div>
                         <div class="text-white/50 text-xs mt-1 mb-3">일정표에는 오늘의 급식 메뉴가 포함됩니다.</div>
                         <div class="flex flex-wrap gap-x-5 gap-y-2 text-sm">
-                            <label class="inline-flex items-center gap-2 cursor-pointer"><input id="share-include-assessments" type="checkbox" class="accent-emerald-400"><span>오늘의 수행평가 (이름·과목·메모·완료 여부)</span></label>
-                            <label class="inline-flex items-center gap-2 cursor-pointer"><input id="share-include-weather" type="checkbox" class="accent-emerald-400"><span>현재 날씨</span></label>
+                            <label class="check-option preference-option"><input id="share-include-assessments" type="checkbox" class="ui-checkbox"><span>오늘의 수행평가 (이름·과목·메모·완료 여부)</span></label>
+                            <label class="check-option preference-option"><input id="share-include-weather" type="checkbox" class="ui-checkbox"><span>현재 날씨</span></label>
                         </div>
                     </div>
                 </div>
@@ -959,7 +976,11 @@
         const timetableShareOptionsKey = "adkTimetableShareOptions";
         function getTimetableShareOptions() { try { const value=JSON.parse(localStorage.getItem(timetableShareOptionsKey)||"{}"); return {assessments:!!value.assessments,weather:!!value.weather}; } catch (_) { return {assessments:false,weather:false}; } }
         function saveTimetableShareOptions() { const options={assessments:!!document.getElementById("share-include-assessments")?.checked,weather:!!document.getElementById("share-include-weather")?.checked}; try { localStorage.setItem(timetableShareOptionsKey,JSON.stringify(options)); } catch (_) { showCustomModal({message:"공유 항목 설정을 저장하지 못했습니다."}); } }
-        function initTimetableShareOptions() { const options=getTimetableShareOptions(), assessments=document.getElementById("share-include-assessments"), weather=document.getElementById("share-include-weather"); if(assessments){assessments.checked=options.assessments;assessments.addEventListener("change",saveTimetableShareOptions);} if(weather){weather.checked=options.weather;weather.addEventListener("change",saveTimetableShareOptions);} }
+        function syncCheckOption(input) { input.closest('.check-option')?.classList.toggle('is-selected',input.checked); }
+        function initTimetableShareOptions() {
+            const options=getTimetableShareOptions(), assessments=document.getElementById("share-include-assessments"), weather=document.getElementById("share-include-weather");
+            [ [assessments,options.assessments], [weather,options.weather] ].forEach(([input,checked])=>{if(!input)return;input.checked=checked;syncCheckOption(input);input.addEventListener("change",()=>{syncCheckOption(input);saveTimetableShareOptions();});});
+        }
         async function createTimetableImageBlob() {
             let entries=Array.isArray(dailyTimetableSchedules)?[...dailyTimetableSchedules]:[];
             if(!entries.length) entries=Array.from(document.querySelectorAll("#timetable-content > div")).map((el,i)=>{const spans=el.querySelectorAll("span");return spans.length>=2?{label:spans[0].textContent+" · ",title:spans[1].textContent,_order:i}:null;}).filter(Boolean);
@@ -1703,13 +1724,14 @@
             for (let i = 1; i <= 19; i++) {
                 const isChecked = userAllergies.includes(i) ? 'checked' : '';
                 html += `
-                    <label class="flex items-center gap-2 text-sm cursor-pointer hover:bg-white/5 p-1 rounded transition text-white">
-                        <input type="checkbox" value="${i}" class="allergy-cb w-4 h-4 accent-blue-500" ${isChecked}>
+                    <label class="check-option allergy-option">
+                        <input type="checkbox" value="${i}" class="allergy-cb ui-checkbox" ${isChecked}>
                         <span>${i}. ${ALLERGY_INFO[i]}</span>
                     </label>
                 `;
             }
             list.innerHTML = html;
+            list.querySelectorAll('.allergy-cb').forEach(input=>{syncCheckOption(input);input.addEventListener('change',()=>syncCheckOption(input));});
 
             const overlay = document.getElementById('allergy-modal-overlay');
             const box = document.getElementById('allergy-modal-box');
@@ -1783,6 +1805,7 @@
             html += `<button onclick="addPeriodItem()" class="w-full bg-white/10 hover:bg-white/20 border border-white/20 border-dashed rounded-xl py-2 text-sm text-white/70 flex items-center justify-center gap-2 transition"><span class="text-lg leading-none">+</span> 새 시간대 추가</button>`;
             
             list.innerHTML = html;
+
             setupDragAndDrop();
             
             const modal = document.getElementById('period-time-modal');
