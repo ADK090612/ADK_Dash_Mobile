@@ -1141,7 +1141,7 @@
         }
 
         function showInitialLoading() { document.getElementById('initial-loading-overlay')?.classList.remove('hidden'); }
-        function hideInitialLoading() { document.getElementById('initial-loading-overlay')?.classList.add('hidden'); }
+        function hideInitialLoading() { document.getElementById('initial-loading-overlay')?.classList.add('hidden'); if(!document.getElementById('tab-home')?.classList.contains('hidden')) showHomeEditHint(); }
         async function checkUserConfig() {
             const config = localStorage.getItem('userConfig');
             if (config) {
@@ -1265,6 +1265,7 @@
             if(tabId === 'home') showHomeEditHint();
             else {
                 clearTimeout(homeEditHintTimer);
+                clearTimeout(homeToggleTimer); homeEditHintUntil=0;
                 const homeTab = document.getElementById('tab-home');
                 homeTab.classList.remove('home-edit-mode');
                 document.getElementById('home-edit-toggle')?.classList.remove('visible');
@@ -1365,6 +1366,8 @@
         let homeToggleTimer = null;
         let homePointerX = -1;
         let homePointerY = -1;
+        let homePointerType = "mouse";
+        let homeEditHintUntil = 0;
         let homeWidgetsReady = false;
         const homeWidgetTitles = ['도서 대출증', '오늘의 요약', '현재 날씨', '오늘의 시간표', '오늘의 급식', '다가오는 학사일정'];
 
@@ -1440,6 +1443,7 @@
                 toggle.title = '홈 위젯 편집';
                 if(editing) {
                     clearTimeout(homeToggleTimer);
+                    homeEditHintUntil = 0;
                     toggle.classList.remove('visible');
                     showHomeEditTools();
                 } else {
@@ -1463,26 +1467,21 @@
             menu.setAttribute('role', 'menu');
             document.body.appendChild(menu);
             document.addEventListener('pointermove', event => {
-                homePointerX = event.clientX;
-                homePointerY = event.clientY;
-                const isHomeVisible = !document.getElementById('tab-home').classList.contains('hidden');
-                const inTopRight = event.clientX >= window.innerWidth / 2 && event.clientY <= window.innerHeight / 2;
-                if(!isHomeVisible || document.getElementById('tab-home').classList.contains('home-edit-mode')) {
-                    clearTimeout(homeToggleTimer);
-                    toggle.classList.remove('visible');
-                } else if(event.pointerType !== 'touch') {
-                    clearTimeout(homeToggleTimer);
-                    toggle.classList.toggle('visible', inTopRight);
-                } else if(inTopRight) {
-                    showHomeEditToggleForTouch();
-                } else {
-                    clearTimeout(homeToggleTimer);
-                    toggle.classList.remove('visible');
-                }
+                homePointerX=event.clientX; homePointerY=event.clientY; homePointerType=event.pointerType||homePointerType;
+                const isHomeVisible=!document.getElementById('tab-home').classList.contains('hidden');
+                const inTopRight=event.clientX>=window.innerWidth/2&&event.clientY<=window.innerHeight/2;
+                if(!isHomeVisible||document.getElementById('tab-home').classList.contains('home-edit-mode')) {
+                    clearTimeout(homeToggleTimer);homeEditHintUntil=0;toggle.classList.remove('visible');
+                } else if(event.pointerType==='touch') {
+                    if(inTopRight) showHomeEditToggleForTouch();
+                    else if(Date.now()>=homeEditHintUntil) toggle.classList.remove('visible');
+                } else if(inTopRight) toggle.classList.add('visible');
+                else if(Date.now()>=homeEditHintUntil) toggle.classList.remove('visible');
             });
             document.addEventListener('pointerdown', event => {
                 if(!menu.classList.contains('hidden') && !menu.contains(event.target) && event.target.id !== 'home-widget-add') menu.classList.add('hidden');
                 const isHomeVisible = !document.getElementById('tab-home').classList.contains('hidden');
+                homePointerType=event.pointerType||homePointerType;
                 const inTopRight = event.clientX >= window.innerWidth / 2 && event.clientY <= window.innerHeight / 2;
                 if(isHomeVisible && inTopRight && !document.getElementById('tab-home').classList.contains('home-edit-mode')) {
                     homePointerX = event.clientX;
@@ -1495,18 +1494,27 @@
         function showHomeEditHint() {
             ensureHomeEditControls();
             if(!homeWidgetsReady) applyHomeWidgetLayout();
-            const inTopRight = homePointerX >= window.innerWidth / 2 && homePointerY <= window.innerHeight / 2;
-            document.getElementById('home-edit-toggle').classList.toggle('visible', inTopRight);
+            const home=document.getElementById('tab-home'), toggle=document.getElementById('home-edit-toggle');
+            if(!home||home.classList.contains('hidden')||home.classList.contains('home-edit-mode')) return;
+            toggle.classList.add('visible');
+            clearTimeout(homeToggleTimer);homeEditHintUntil=Date.now()+3000;
+            homeToggleTimer=setTimeout(()=>{
+                homeEditHintUntil=0;
+                const pointerInTopRight=homePointerType!=='touch'&&homePointerX>=window.innerWidth/2&&homePointerY<=window.innerHeight/2;
+                toggle.classList.toggle('visible',!home.classList.contains('hidden')&&!home.classList.contains('home-edit-mode')&&pointerInTopRight);
+            },3000);
         }
 
         function showHomeEditToggleForTouch() {
-            const toggle = document.getElementById('home-edit-toggle');
-            if(!toggle || document.getElementById('tab-home').classList.contains('home-edit-mode')) return;
-            toggle.classList.add('visible');
-            clearTimeout(homeToggleTimer);
-            homeToggleTimer = setTimeout(() => toggle.classList.remove('visible'), 3000);
+            const toggle=document.getElementById('home-edit-toggle'),home=document.getElementById('tab-home');
+            if(!toggle||!home||home.classList.contains('home-edit-mode')) return;
+            toggle.classList.add('visible');clearTimeout(homeToggleTimer);homeEditHintUntil=Date.now()+3000;
+            homeToggleTimer=setTimeout(()=>{
+                homeEditHintUntil=0;
+                const pointerInTopRight=homePointerType!=='touch'&&homePointerX>=window.innerWidth/2&&homePointerY<=window.innerHeight/2;
+                toggle.classList.toggle('visible',!home.classList.contains('hidden')&&!home.classList.contains('home-edit-mode')&&pointerInTopRight);
+            },3000);
         }
-
         function showHomeEditTools() {
             const tools = document.getElementById('home-edit-tools');
             if(!tools) return;
