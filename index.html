@@ -304,6 +304,23 @@
         #nav-indicator { position: absolute; top: 8px; bottom: 8px; background: rgba(0, 0, 0, 0.4); border-radius: 9999px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 0; box-shadow: inset 0 1px 4px rgba(0,0,0,0.5); }
         #nav-indicator.dragging { transition: none; cursor: grabbing; }
         #nav-indicator { pointer-events: none; }
+        .region-loading-host { position: relative !important; }
+        .region-loading-host.region-is-loading { min-height: 76px; }
+        .region-loading-overlay { position: absolute; inset: 0; z-index: 35; display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 76px; border-radius: inherit; background: rgba(8,12,20,.72); backdrop-filter: blur(7px); -webkit-backdrop-filter: blur(7px); color: rgba(255,255,255,.82); font-size: .78rem; pointer-events: none; }
+        .region-loading-overlay.list-loader { width: 100%; list-style: none; }
+        .region-loader-dots { position: relative; width: 42px; height: 42px; flex: 0 0 42px; animation: regionLoaderSpin 1.2s linear infinite; }
+        .region-loader-dot { position: absolute; width: 12px; height: 12px; border-radius: 50%; filter: drop-shadow(0 0 5px currentColor); animation: regionLoaderPulse 1s ease-in-out infinite; }
+        .region-loader-dot:nth-child(1) { left: 2px; top: 2px; color: #4b87ff; background: currentColor; }
+        .region-loader-dot:nth-child(2) { right: 2px; top: 2px; color: #70c9c4; background: currentColor; animation-delay: .15s; }
+        .region-loader-dot:nth-child(3) { right: 2px; bottom: 2px; color: #398fe0; background: currentColor; animation-delay: .3s; }
+        .region-loader-dot:nth-child(4) { left: 2px; bottom: 2px; color: #45c893; background: currentColor; animation-delay: .45s; }
+        @keyframes regionLoaderSpin { to { transform: rotate(360deg); } }
+        @keyframes regionLoaderPulse { 0%,100% { opacity: .72; transform: scale(.82); } 50% { opacity: 1; transform: scale(1.08); } }
+        :root[data-theme="light"] .region-loading-overlay { color: rgba(32,43,61,.82); background: rgba(245,247,250,.76); }
+        @media (prefers-reduced-motion: reduce) { .region-loader-dots, .region-loader-dot { animation-duration: 2s; } }
+        .initial-loading-overlay { position: fixed; inset: 0; z-index: 180; place-items: center; padding: 0; background: transparent; }
+        .initial-loading-overlay:not(.hidden) { display: grid; }
+        @media (prefers-reduced-motion: reduce) { .region-loader-dots, .region-loader-dot { animation: none; } }
     </style>
     <script>
         try { const initialTheme = localStorage.getItem('adkTheme') === 'light' ? 'light' : 'dark'; document.documentElement.dataset.theme = initialTheme; } catch (error) {}
@@ -384,6 +401,9 @@
         </div>
     </div>
 
+    <div id="initial-loading-overlay" class="initial-loading-overlay hidden" role="status" aria-live="polite" aria-label="오늘의 정보를 불러오는 중">
+        <span class="region-loader-dots" aria-hidden="true"><span class="region-loader-dot"></span><span class="region-loader-dot"></span><span class="region-loader-dot"></span><span class="region-loader-dot"></span></span>
+    </div>
     <div id="main-app" class="app-container hidden">
         <div id="tab-home" class="tab-content flex flex-col gap-5">
             <header class="mb-2 anim-box">
@@ -1083,11 +1103,9 @@
             const msUntilNextHour = (60 - now.getMinutes()) * 60000 - (now.getSeconds() * 1000) - now.getMilliseconds();
             
             setTimeout(async () => {
-                await fetchWeather();
-                await refreshAPIInfo();
+                await Promise.all([fetchWeather(), refreshAPIInfo()]);
                 setInterval(async () => {
-                    await fetchWeather();
-                    await refreshAPIInfo();
+                    await Promise.all([fetchWeather(), refreshAPIInfo()]);
                 }, 3600000);
             }, msUntilNextHour);
         }
@@ -1101,10 +1119,13 @@
             updateBrief();
         }
 
+        function showInitialLoading() { document.getElementById('initial-loading-overlay')?.classList.remove('hidden'); }
+        function hideInitialLoading() { document.getElementById('initial-loading-overlay')?.classList.add('hidden'); }
         async function checkUserConfig() {
             const config = localStorage.getItem('userConfig');
             if (config) {
                 const userData = JSON.parse(config);
+                showInitialLoading();
                 applyUserData(userData);
                 showMainApp();
                 setTimeout(() => {
@@ -1112,8 +1133,8 @@
                     triggerAnimations('home'); 
                 }, 100);
                 
-                await fetchWeather(); 
-                await refreshAPIInfo();
+                try { await Promise.all([fetchWeather(), refreshAPIInfo()]); }
+                finally { hideInitialLoading(); }
                 setupHourlyRefresh();
                 renderTimelineSchedules(new Date()); 
 
@@ -1155,13 +1176,13 @@
                 allergies: [] // 알레르기 배열 기본 추가
             };
             localStorage.setItem('userConfig', JSON.stringify(userData));
-            
+            showInitialLoading();
             document.getElementById('onboarding-screen').classList.add('hidden');
             applyUserData(userData);
             showMainApp();
             
-            await fetchWeather(); 
-            await refreshAPIInfo();
+            try { await Promise.all([fetchWeather(), refreshAPIInfo()]); }
+            finally { hideInitialLoading(); }
             setupHourlyRefresh();
             renderTimelineSchedules(new Date());
 
@@ -2142,6 +2163,25 @@
         }
 
         // --- 외부 API 연동 기능 ---
+        const activeRegionLoaders = new WeakMap();
+        async function withRegionLoading(containerId, message, request) {
+            const container=document.getElementById(containerId);
+            if(!container) return request();
+            let state=activeRegionLoaders.get(container);
+            if(!state){
+                state={count:0,overlay:null};activeRegionLoaders.set(container,state);
+                const isList=container.tagName==='UL'||container.tagName==='OL';
+                const overlay=document.createElement(isList?'li':'div');
+                overlay.className='region-loading-overlay'+(isList?' list-loader':''); overlay.setAttribute('role','status');
+                const spinner=document.createElement('span');spinner.className='region-loader-dots';spinner.setAttribute('aria-hidden','true');
+                for(let i=0;i<4;i++){const dot=document.createElement('span');dot.className='region-loader-dot';spinner.appendChild(dot);}
+                const label=document.createElement('span');label.textContent=message;overlay.append(spinner,label);state.overlay=overlay;
+            }
+            state.count++;container.classList.add('region-loading-host','region-is-loading');container.setAttribute('aria-busy','true');
+            if(!state.overlay.isConnected)container.appendChild(state.overlay);
+            try{return await request();}
+            finally{state.count=Math.max(0,state.count-1);if(state.count===0){state.overlay?.remove();container.classList.remove('region-is-loading','region-loading-host');container.setAttribute('aria-busy','false');activeRegionLoaders.delete(container);}}
+        }
         function renderApiError(containerId, message, retry, asList = false) {
             const container = document.getElementById(containerId); if(!container) return;
             container.replaceChildren();
@@ -2149,9 +2189,9 @@
             const button = document.createElement('button'); button.type = 'button'; button.className = 'action-button rounded-full px-3 py-1.5 text-xs mt-2'; button.textContent = '다시 시도'; button.addEventListener('click', retry);
             container.append(messageEl, button);
         }
-        async function fetchWeather() {
+        async function fetchWeatherRequest() {
             return new Promise((resolve) => {
-                document.getElementById('weather-content').innerHTML = '<div class="text-sm text-white/50">위치 파악 중...</div>';
+                document.getElementById('weather-content').setAttribute('aria-label','날씨 정보를 불러오는 중');
                 
                 // HTML5 GPS (Geolocation API) 사용 시도
                 if (navigator.geolocation) {
@@ -2176,6 +2216,7 @@
             });
         }
 
+        async function fetchWeather() { return withRegionLoading("weather-content","날씨 정보를 불러오는 중...",()=>fetchWeatherRequest()); }
         // 실제 OpenWeatherMap API 호출을 담당하는 별도 함수
         async function fetchWeatherData(query) {
             try {
@@ -2216,7 +2257,7 @@
             }
         }
 
-        async function fetchMeal() {
+        async function fetchMealRequest() {
             try {
                 const today = new Date();
                 const ymd = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
@@ -2305,7 +2346,8 @@
             }
         }
 
-        async function fetchNeisSchedules() {
+        async function fetchMeal() { return withRegionLoading("meal-content","급식 정보를 불러오는 중...",()=>fetchMealRequest()); }
+        async function fetchNeisSchedulesRequest() {
             try {
                 const today = new Date();
                 
@@ -2396,7 +2438,8 @@
             }
         }
 
-        async function fetchNeisTimetable() {
+        async function fetchNeisSchedules() { return withRegionLoading("home-schedule-list","학사일정을 불러오는 중...",()=>fetchNeisSchedulesRequest()); }
+        async function fetchNeisTimetableRequest() {
             let config = null; try { config = JSON.parse(localStorage.getItem('userConfig') || 'null'); } catch(error) { console.warn('저장된 학교 설정을 읽지 못했습니다.', error); }
             if (!config || typeof config !== 'object') return;
             
@@ -2477,6 +2520,7 @@
         }
 
         // --- 브리프 생성 및 업데이트 로직 ---
+        async function fetchNeisTimetable() { return withRegionLoading("timetable-content","시간표를 불러오는 중...",()=>fetchNeisTimetableRequest()); }
         function updateBrief() {
             const now = new Date();
             const nowMinutes = now.getHours() * 60 + now.getMinutes();
