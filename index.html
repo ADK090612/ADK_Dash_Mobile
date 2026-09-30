@@ -95,6 +95,10 @@
         :root[data-theme="light"] .timeline-event[class~="bg-blue-500/30"] { background: rgba(59,130,246,0.15); border-color: rgba(37,99,235,0.28); }
         :root[data-theme="light"] .timeline-event[class~="bg-yellow-500/30"] { background: rgba(234,179,8,0.18); border-color: rgba(202,138,4,0.3); }
         :root[data-theme="light"] .timeline-event[class~="bg-purple-500/30"] { background: rgba(168,85,247,0.15); border-color: rgba(147,51,234,0.28); }
+        :root[data-theme="light"] [class~="text-red-300"], :root[data-theme="light"] [class~="text-red-400"], :root[data-theme="light"] [class~="text-red-500"] { color: #b42318 !important; }
+        :root[data-theme="light"] [class~="text-blue-400"] { color: #1d4ed8 !important; }
+        :root[data-theme="light"] [class~="text-emerald-200"] { color: #047857 !important; }
+        :root[data-theme="light"] [class~="text-amber-200/75"] { color: #92400e !important; }
         :root[data-theme="light"] .nav-item { color: rgba(32,43,61,0.76); }
         :root[data-theme="light"] .nav-item.active { color: #fff; }
         :root[data-theme="light"] .action-button { color: #202b3d; background: rgba(255,255,255,0.66); border-color: rgba(45,60,82,0.16); }
@@ -265,6 +269,8 @@
         .home-edit-tool svg { width: 19px; height: 19px; }
         #home-widget-menu { position: fixed; top: calc(max(24px, env(safe-area-inset-top)) + 54px); right: 24px; z-index: 60; width: min(260px, calc(100vw - 48px)); }
         .home-widget-menu-item { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 12px 14px; color: white; font-size: 0.875rem; text-align: left; }
+        :root[data-theme="light"] .home-widget-menu-item { color: #202b3d; }
+        :root[data-theme="light"] .home-widget-menu-item:hover { background: rgba(45,60,82,.07); }
         #tab-home.home-edit-mode .home-widget { position: relative; padding-top: 3.25rem; }
         .home-widget-controls { position: absolute; top: 9px; left: 10px; right: 10px; display: flex; align-items: center; justify-content: space-between; z-index: 20; pointer-events: none; }
         .home-widget-controls > * { pointer-events: auto; }
