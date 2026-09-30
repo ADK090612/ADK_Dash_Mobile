@@ -1566,6 +1566,7 @@
         function finishHomeWidgetDrag(pointerId, cancelled = false) {
             if(!activeHomeWidgetDrag || (pointerId !== undefined && activeHomeWidgetDrag.pointerId !== pointerId)) return;
             const state = activeHomeWidgetDrag;
+            if(state.scrollFrame!==null&&state.scrollFrame!==undefined) cancelAnimationFrame(state.scrollFrame);
             const { widget, placeholder, preview, originalNext } = state;
             if(cancelled && originalNext && originalNext.parentNode === widget.parentNode) widget.parentNode.insertBefore(widget, originalNext);
             else if(cancelled && placeholder.parentNode) placeholder.parentNode.insertBefore(widget, placeholder);
@@ -1600,28 +1601,46 @@
                 homeWidgetMotion.set(element, { frame, timer: 0 });
             });
         }
+        function updateHomeWidgetDragPosition(state) {
+            if(!state?.widget?.isConnected) return;
+            const {widget,placeholder,preview}=state,home=document.getElementById('tab-home');
+            const siblings=getHomeWidgets().filter(item=>!item.hidden&&item!==widget);
+            const next=siblings.find(item=>state.pointerY<item.getBoundingClientRect().top+item.getBoundingClientRect().height/2);
+            if((next&&placeholder.nextElementSibling!==next)||(!next&&home.lastElementChild!==placeholder)){
+                animateHomeWidgetDropMove(home,placeholder,()=>{if(next)home.insertBefore(placeholder,next);else home.appendChild(placeholder);});
+            }
+            const previewWidth=Math.min(state.width,420,window.innerWidth-24);
+            preview.style.width=`${previewWidth}px`;preview.style.left=`${state.pointerX}px`;preview.style.top=`${state.pointerY+5}px`;
+        }
+        function getHomeWidgetAutoScrollEdge(state,scroller) {
+            if(!state||!scroller)return null;
+            const bounds=scroller.getBoundingClientRect(),zone=Math.max(1,scroller.clientHeight*.3),y=state.pointerY;
+            const topDepth=(bounds.top+zone-y)/zone;
+            const bottomDepth=(y-(bounds.bottom-zone))/zone;
+            if(topDepth>0&&scroller.scrollTop>0)return{direction:-1,depth:Math.min(1,topDepth)};
+            if(bottomDepth>0&&scroller.scrollTop+scroller.clientHeight<scroller.scrollHeight-1)return{direction:1,depth:Math.min(1,bottomDepth)};
+            return null;
+        }
+        function autoScrollHomeWidgetDrag(timestamp) {
+            const state=activeHomeWidgetDrag;if(!state)return;
+            state.scrollFrame=null;
+            const scroller=document.querySelector('.app-container'),edge=getHomeWidgetAutoScrollEdge(state,scroller);
+            if(!edge){state.scrollLastFrame=0;return;}
+            const elapsed=state.scrollLastFrame?Math.min(40,timestamp-state.scrollLastFrame):16.7;state.scrollLastFrame=timestamp;
+            const speed=120+780*Math.pow(edge.depth,1.35),before=scroller.scrollTop;
+            scroller.scrollTop+=edge.direction*speed*elapsed/1000;
+            if(Math.abs(scroller.scrollTop-before)>.1)updateHomeWidgetDragPosition(state);
+            if(getHomeWidgetAutoScrollEdge(state,scroller))state.scrollFrame=requestAnimationFrame(autoScrollHomeWidgetDrag);
+            else state.scrollLastFrame=0;
+        }
         function moveHomeWidgetDrag(event) {
-            const state = activeHomeWidgetDrag;
-            if(!state || state.pointerId !== event.pointerId) return;
-            event.preventDefault();
-            const { widget, placeholder, preview } = state;
-            const home = document.getElementById('tab-home');
-            const siblings = getHomeWidgets().filter(item => !item.hidden && item !== widget);
-            const next = siblings.find(item => event.clientY < item.getBoundingClientRect().top + item.getBoundingClientRect().height / 2);
-            if((next && placeholder.nextElementSibling !== next) || (!next && home.lastElementChild !== placeholder)) {
-                animateHomeWidgetDropMove(home, placeholder, () => { if(next) home.insertBefore(placeholder, next); else home.appendChild(placeholder); });
-            }
-            const previewWidth = Math.min(state.width, 420, window.innerWidth - 24);
-            preview.style.width = `${previewWidth}px`;
-            // 손잡이의 중심을 포인터의 x좌표에 직접 고정해 박스 폭에 따른 우측 밀림을 방지합니다.
-            preview.style.left = `${event.clientX}px`;
-            preview.style.top = `${event.clientY + 5}px`;
-            const scroller = document.querySelector('.app-container');
-            if(scroller) {
-                const bounds = scroller.getBoundingClientRect();
-                if(event.clientY < bounds.top + 56) scroller.scrollTop -= 14;
-                else if(event.clientY > bounds.bottom - 72) scroller.scrollTop += 14;
-            }
+            const state=activeHomeWidgetDrag;
+            if(!state||state.pointerId!==event.pointerId)return;
+            event.preventDefault();state.pointerX=event.clientX;state.pointerY=event.clientY;
+            updateHomeWidgetDragPosition(state);
+            const scroller=document.querySelector('.app-container'),edge=getHomeWidgetAutoScrollEdge(state,scroller);
+            if(edge&&state.scrollFrame===null)state.scrollFrame=requestAnimationFrame(autoScrollHomeWidgetDrag);
+            else if(!edge&&state.scrollFrame!==null){cancelAnimationFrame(state.scrollFrame);state.scrollFrame=null;state.scrollLastFrame=0;}
         }
         document.addEventListener('pointermove', moveHomeWidgetDrag, {passive:false});
         document.addEventListener('pointerup', event => finishHomeWidgetDrag(event.pointerId));
@@ -1659,7 +1678,7 @@
                     preview.append(previewHandle, previewTitle); document.body.appendChild(preview);
                     const originalNext = widget.nextElementSibling;
                     widget.parentNode.insertBefore(placeholder, widget);
-                    activeHomeWidgetDrag = { widget, pointerId: event.pointerId, placeholder, preview, originalNext, width: rect.width };
+                    activeHomeWidgetDrag = { widget, pointerId: event.pointerId, placeholder, preview, originalNext, width: rect.width, pointerX: event.clientX, pointerY: event.clientY, scrollFrame: null, scrollLastFrame: 0 };
                     widget.classList.add('is-widget-dragging');
                     moveHomeWidgetDrag(event);
                 });
