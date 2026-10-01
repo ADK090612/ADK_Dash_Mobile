@@ -105,6 +105,11 @@
         .action-button { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; border:1px solid rgba(255,255,255,.26); background:rgba(255,255,255,.14); color:white; border-radius:9999px; box-shadow:inset 0 1px 1px rgba(255,255,255,.16),0 6px 18px rgba(0,0,0,.12); transition:background .2s,transform .2s,box-shadow .2s; }
         .action-button:hover { background:rgba(255,255,255,.23); box-shadow:inset 0 1px 1px rgba(255,255,255,.2),0 8px 22px rgba(0,0,0,.16); }
         .action-button:active { transform:scale(.97); }
+        .date-stepper { display:inline-flex; align-items:center; gap:4px; flex-shrink:0; }
+        .date-stepper .date-stepper-arrow { width:34px; height:34px; padding:0; font-size:1.2rem; line-height:1; }
+        .date-stepper .date-stepper-today { padding:7px 11px; font-size:.72rem; font-weight:600; }
+        .date-stepper-label { min-width:104px; text-align:center; color:rgba(255,255,255,.78); font-size:.76rem; white-space:nowrap; }
+        :root[data-theme="light"] .date-stepper-label { color:rgba(32,43,61,.78); }
         .timetable-toolbar-button { appearance: none; -webkit-appearance: none; background-clip: padding-box; outline: none; box-shadow: 0 6px 16px rgba(0,0,0,.22); border-color: rgba(255,255,255,.2); }
         .timetable-toolbar-button:hover { background-color: rgba(255,255,255,.2) !important; box-shadow: 0 8px 18px rgba(0,0,0,.25); }
         .timetable-toolbar-button:active { transform: scale(.97); }
@@ -472,16 +477,31 @@
             </section>
             
             <section class="liquid-glass card p-5 anim-box d-2">
-                <h3 class="text-lg font-semibold mb-3 anim-text d-2">오늘의 시간표 ⏰</h3>
+                <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+                    <h3 class="text-lg font-semibold anim-text d-2">시간표 ⏰</h3>
+                    <div class="date-stepper" aria-label="시간표와 급식 날짜 선택">
+                        <button type="button" class="action-button date-stepper-arrow" onclick="shiftDashboardDate(-1)" aria-label="전날" title="전날">‹</button>
+                        <span id="home-selected-date" class="date-stepper-label" aria-live="polite"></span>
+                        <button type="button" class="action-button date-stepper-arrow" onclick="shiftDashboardDate(1)" aria-label="다음 날" title="다음 날">›</button>
+                        <button type="button" class="action-button date-stepper-today" onclick="goToDashboardToday()">오늘</button>
+                    </div>
+                </div>
                 <div id="timetable-content" class="grid grid-cols-2 gap-2 text-sm text-white/90 min-h-[60px]">
                     <div class="text-white/70 col-span-2">시간표를 불러오는 중...</div>
                 </div>
             </section>
 
             <section class="liquid-glass card p-5 anim-box d-2">
-                <div class="flex justify-between items-center mb-3">
-                    <h3 class="text-lg font-semibold anim-text d-2">오늘의 급식 🍱</h3>
-                    <button onclick="showAllergyInfo()" class="text-xs text-white/80 bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition active:scale-95">알러지 정보 표시</button>
+                <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+                    <div class="flex items-center gap-2 min-w-0"><h3 class="text-lg font-semibold anim-text d-2">급식 🍱</h3><span id="home-meal-date" class="date-stepper-label"></span></div>
+                    <div class="flex items-center gap-2">
+                        <div class="date-stepper" aria-label="급식 날짜 선택">
+                            <button type="button" class="action-button date-stepper-arrow" onclick="shiftMealDate(-1)" aria-label="급식 전날" title="전날">‹</button>
+                            <button type="button" class="action-button date-stepper-arrow" onclick="shiftMealDate(1)" aria-label="급식 다음 날" title="다음 날">›</button>
+                            <button type="button" class="action-button date-stepper-today" onclick="goToMealToday()">오늘</button>
+                        </div>
+                        <button onclick="showAllergyInfo()" class="text-xs text-white/80 bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition active:scale-95">알러지 정보 표시</button>
+                    </div>
                 </div>
                 <div id="meal-content" class="text-sm leading-relaxed text-white/90 min-h-[60px]">급식 정보를 불러오는 중...</div>
             </section>
@@ -496,12 +516,18 @@
         </div>
 
         <div id="tab-timetable" class="tab-content hidden flex flex-col h-full overflow-hidden">
-            <div class="flex justify-between items-center mb-4 shrink-0 anim-box">
+            <div class="flex flex-wrap justify-between items-center gap-2 mb-4 shrink-0 anim-box">
                 <h2 id="timetable-title" class="text-2xl font-bold drop-shadow-md anim-text">일일 스케줄</h2>
+                <div class="date-stepper" aria-label="스케줄 날짜 선택">
+                    <button type="button" class="action-button date-stepper-arrow" onclick="shiftDashboardDate(-1)" aria-label="전날" title="전날">‹</button>
+                    <span id="schedule-selected-date" class="date-stepper-label" aria-live="polite"></span>
+                    <button type="button" class="action-button date-stepper-arrow" onclick="shiftDashboardDate(1)" aria-label="다음 날" title="다음 날">›</button>
+                    <button type="button" class="action-button date-stepper-today" onclick="goToDashboardToday()">오늘</button>
+                </div>
             </div>
             <div id="timetable-actions" aria-label="시간표 도구">
                 <button type="button" id="timetable-action-edit" class="home-edit-tool liquid-glass pill timetable-action-edit" onclick="toggleTimetableEditMode()" aria-label="과목 수정" title="과목 수정" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L8 18l-4 1 1-4Z"/></svg></button>
-                <button type="button" class="home-edit-tool liquid-glass pill timetable-action-add" onclick="openScheduleModal(new Date())" aria-label="일정 추가" title="일정 추가"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+                <button type="button" class="home-edit-tool liquid-glass pill timetable-action-add" onclick="openSelectedScheduleModal()" aria-label="일정 추가" title="일정 추가"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
                 <button type="button" id="timetable-share-toggle" class="home-edit-tool liquid-glass pill timetable-action-share" onclick="toggleTimetableShareMenu()" aria-label="시간표 공유 및 내보내기" title="공유 및 내보내기" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.6 6.6-4.2M8.7 13.4l6.6 4.2"/></svg></button>
             </div>
             <div id="timetable-share-menu" class="liquid-glass card p-2 hidden" role="menu" aria-label="시간표 공유 및 저장">
@@ -738,6 +764,69 @@
         let neisSchedulesData = safeStoredArray('neisSchedules', x => x && typeof x.title === 'string' && x.title.length <= 300 && isValidISODate(x.date) && isValidISODate(x.endDate || x.date) && (x.endDate || x.date) >= x.date);
         let dailyTimetableSchedules = [];
         let selectedModalDate = new Date();
+        let selectedDashboardDate = new Date();
+        selectedDashboardDate.setHours(12, 0, 0, 0);
+        let selectedMealDate = new Date();
+        selectedMealDate.setHours(12, 0, 0, 0);
+        const mealViewDataByDate = Object.create(null);
+
+        function updateDashboardDateLabels() {
+            const label = new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month: 'numeric', day: 'numeric', weekday: 'short' }).format(selectedDashboardDate);
+            const mealLabel = new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric', weekday: 'short' }).format(selectedMealDate);
+            ['home-selected-date', 'schedule-selected-date'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = label; });
+            const mealDate = document.getElementById('home-meal-date'); if(mealDate) mealDate.textContent = mealLabel;
+        }
+        function refreshTimetableDateData() {
+            return Promise.all([fetchNeisTimetable(selectedDashboardDate), fetchMeal(selectedDashboardDate, 'timeline')]).then(() => {
+                if(formatDate(selectedDashboardDate) === formatDate(new Date()) && formatDate(selectedMealDate) === formatDate(new Date())) updateBrief();
+            });
+        }
+        function refreshMealDateData() {
+            return fetchMeal(selectedMealDate, 'home').then(() => {
+                if(formatDate(selectedDashboardDate) === formatDate(new Date()) && formatDate(selectedMealDate) === formatDate(new Date())) updateBrief();
+            });
+        }
+        function changeDashboardDate(offset) {
+            const date = new Date(selectedDashboardDate);
+            date.setDate(date.getDate() + offset);
+            date.setHours(12, 0, 0, 0);
+            selectedDashboardDate = date;
+            dailyTimetableSchedules = [];
+            const cachedMeal = mealViewDataByDate[formatDate(date)];
+            todayMealMenuItems = cachedMeal?.items || []; todayMealBriefData = cachedMeal?.brief || '';
+            updateDashboardDateLabels();
+            renderTimelineSchedules(selectedDashboardDate);
+            updateTimelineRedLine();
+            refreshTimetableDateData();
+        }
+        function shiftDashboardDate(offset) { changeDashboardDate(offset); }
+        function openSelectedScheduleModal() { openScheduleModal(new Date(selectedDashboardDate)); }
+        function goToDashboardToday() {
+            const today = new Date(); today.setHours(12, 0, 0, 0);
+            selectedDashboardDate = today;
+            dailyTimetableSchedules = [];
+            const cachedMeal = mealViewDataByDate[formatDate(today)];
+            todayMealMenuItems = cachedMeal?.items || []; todayMealBriefData = cachedMeal?.brief || '';
+            updateDashboardDateLabels();
+            renderTimelineSchedules(selectedDashboardDate);
+            updateTimelineRedLine();
+            refreshTimetableDateData();
+        }
+        function changeMealDate(offset) {
+            const date = new Date(selectedMealDate);
+            date.setDate(date.getDate() + offset); date.setHours(12, 0, 0, 0);
+            selectedMealDate = date;
+            detectedAllergiesInMeal = mealViewDataByDate[formatDate(date)]?.allergies || [];
+            updateDashboardDateLabels();
+            refreshMealDateData();
+        }
+        function shiftMealDate(offset) { changeMealDate(offset); }
+        function goToMealToday() {
+            selectedMealDate = new Date(); selectedMealDate.setHours(12, 0, 0, 0);
+            detectedAllergiesInMeal = mealViewDataByDate[formatDate(selectedMealDate)]?.allergies || [];
+            updateDashboardDateLabels();
+            refreshMealDateData();
+        }
 
         // 브리프 연동 데이터
         let weatherBriefData = { temp: 0, condition: '', isRain: false };
@@ -919,7 +1008,7 @@
         }
         let timetableEditMode = false;
         function readTimetableOverrides() { try { const value=JSON.parse(localStorage.getItem('customTimetableOverrides')||'{}'); return value&&typeof value==='object'&&!Array.isArray(value)?value:{}; } catch (_) { return {}; } }
-        function timetableOverrideKey(period, config=null) { const user=config || readUserConfig(); return `${user?.regionCode||DEFAULT_REGION_CODE}:${user?.schoolCode||DEFAULT_SCHOOL_CODE}:${user?.grade||''}:${user?.class||''}:${new Date().getDay()}:${period}`; }
+        function timetableOverrideKey(period, config=null) { const user=config || readUserConfig(); return `${user?.regionCode||DEFAULT_REGION_CODE}:${user?.schoolCode||DEFAULT_SCHOOL_CODE}:${user?.grade||''}:${user?.class||''}:${selectedDashboardDate.getDay()}:${period}`; }
         function toggleTimetableEditMode() {
             timetableEditMode=!timetableEditMode;
             const button=document.getElementById('timetable-action-edit'); const content=document.getElementById('timetable-content'); const title=document.getElementById('timetable-title');
@@ -1112,6 +1201,7 @@
 
             buildTimeline();
             initCalendar();
+            updateDashboardDateLabels();
             checkUserConfig();
             
             setInterval(updateTimelineRedLine, 60000);
@@ -1139,8 +1229,12 @@
         }
 
         async function refreshAPIInfo() {
+            const sameDate = formatDate(selectedMealDate) === formatDate(selectedDashboardDate);
+            const mealRequests = sameDate
+                ? [fetchMeal(selectedMealDate, 'home')]
+                : [fetchMeal(selectedMealDate, 'home'), fetchMeal(selectedDashboardDate, 'timeline')];
             await Promise.all([
-                fetchMeal(),
+                ...mealRequests,
                 fetchNeisSchedules(),
                 fetchNeisTimetable()
             ]);
@@ -1163,7 +1257,7 @@
                 try { await Promise.all([fetchWeather(), refreshAPIInfo()]); }
                 finally { hideInitialLoading(); }
                 setupHourlyRefresh();
-                renderTimelineSchedules(new Date()); 
+            renderTimelineSchedules(selectedDashboardDate); 
 
                 if(briefInterval) clearInterval(briefInterval);
                 briefInterval = setInterval(updateBrief, 60 * 1000); // 1분 주기로 단축
@@ -1211,7 +1305,7 @@
             try { await Promise.all([fetchWeather(), refreshAPIInfo()]); }
             finally { hideInitialLoading(); }
             setupHourlyRefresh();
-            renderTimelineSchedules(new Date());
+            renderTimelineSchedules(selectedDashboardDate); 
 
             if(briefInterval) clearInterval(briefInterval);
             briefInterval = setInterval(updateBrief, 60 * 1000); // 1분 주기로 단축
@@ -1258,7 +1352,7 @@
             updateNavIndicator(element);
             
             if(tabId === 'timetable') {
-                renderTimelineSchedules(new Date());
+            renderTimelineSchedules(selectedDashboardDate);
                 // 약간의 지연을 주어 DOM이 완전히 렌더링 된 이후 스크롤을 이동시킵니다.
                 setTimeout(() => { centerTimelineOnRedLine(); }, 50);
             } else if(tabId === 'calendar') {
@@ -2325,10 +2419,12 @@
             }
         }
 
-        async function fetchMealRequest() {
+        async function fetchMealRequest(date = selectedMealDate) {
+            const requestedDate = date instanceof Date && !Number.isNaN(date.getTime()) ? new Date(date) : new Date(selectedMealDate);
+            requestedDate.setHours(12, 0, 0, 0);
+            const requestedDateKey = formatDate(requestedDate);
             try {
-                const today = new Date();
-                const ymd = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+                const ymd = `${requestedDate.getFullYear()}${String(requestedDate.getMonth() + 1).padStart(2, '0')}${String(requestedDate.getDate()).padStart(2, '0')}`;
                 
                 const config = readUserConfig();
                 const regionCode = config ? config.regionCode : DEFAULT_REGION_CODE;
@@ -2338,18 +2434,17 @@
                 const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${regionCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_YMD=${ymd}`;
                 
                 const result = await fetchCachedJson(url, "adk_meal_"+regionCode+"_"+schoolCode+"_"+ymd, v=>!!(v&&(v.RESULT?.CODE==="INFO-200"||(Array.isArray(v.mealServiceDietInfo)&&(!v.mealServiceDietInfo[1]||Array.isArray(v.mealServiceDietInfo[1].row))))), 259200000); const data=result.data;
+                if(requestedDateKey !== formatDate(selectedMealDate) && requestedDateKey !== formatDate(selectedDashboardDate)) return;
 
-                
-                detectedAllergiesInMeal = [];
-
+                let detectedForDate = [];
+                let briefMealNames = [];
+                let displayHtml = '';
                 if (data.mealServiceDietInfo && data.mealServiceDietInfo[1] && Array.isArray(data.mealServiceDietInfo[1].row) && data.mealServiceDietInfo[1].row.length) {
                     const mealRow = data.mealServiceDietInfo[1].row[0];
                     if(!mealRow || typeof mealRow.DDISH_NM !== 'string') throw Error('API_RESPONSE_INVALID');
                     const mealStr = mealRow.DDISH_NM;
                     
                     const rawItems = mealStr.split('<br/>');
-                    let displayHtml = '';
-                    let briefMealNames = [];
 
                     rawItems.forEach(item => {
                         // NEIS 알레르기 표기는 메뉴 끝의 괄호 안 숫자 목록만 인식한다.
@@ -2376,7 +2471,7 @@
                         });
 
                         if (hasWarning) {
-                            detectedAllergiesInMeal.push({ menu: textPart, matchedAllergies: matchedUserAllergies });
+                            detectedForDate.push({ menu: textPart, matchedAllergies: matchedUserAllergies });
                         }
 
                         // 화면 출력용 HTML 작성 (사용자 등록 알러지 번호는 빨간색 하이라이트)
@@ -2391,20 +2486,36 @@
                         displayHtml += `<div>${itemHtml}</div>`;
                     });
                     
-                    document.getElementById('meal-content').innerHTML = displayHtml + offlineNote(result);
-                    todayMealMenuItems = briefMealNames.filter(Boolean); todayMealBriefData = todayMealMenuItems.join(", "); renderTimelineSchedules(new Date());
+                    displayHtml += offlineNote(result);
                 } else {
-                    document.getElementById('meal-content').innerHTML = '<div class="text-white/50">급식 정보가 없습니다.😢</div>';
-                    todayMealMenuItems = []; todayMealBriefData = ''; renderTimelineSchedules(new Date());
+                    displayHtml = '<div class="text-white/50">급식 정보가 없습니다.😢</div>' + offlineNote(result);
+                }
+                const mealData = { items: briefMealNames.filter(Boolean), brief: briefMealNames.filter(Boolean).join(', '), allergies: detectedForDate };
+                mealViewDataByDate[requestedDateKey] = mealData;
+                const mealDateKeys = Object.keys(mealViewDataByDate);
+                if(mealDateKeys.length > 40) delete mealViewDataByDate[mealDateKeys[0]];
+                if(requestedDateKey === formatDate(selectedMealDate)) {
+                    document.getElementById('meal-content').innerHTML = displayHtml;
+                    detectedAllergiesInMeal = detectedForDate;
+                }
+                if(requestedDateKey === formatDate(selectedDashboardDate)) {
+                    todayMealMenuItems = mealData.items; todayMealBriefData = mealData.brief;
+                    renderTimelineSchedules(requestedDate);
                 }
             } catch(e) {
+                const isMealDate = requestedDateKey === formatDate(selectedMealDate);
+                const isTimetableDate = requestedDateKey === formatDate(selectedDashboardDate);
+                if(!isMealDate && !isTimetableDate) return;
                 console.error(e);
-                renderApiError('meal-content', neisUserError(e,'급식'), fetchMeal);
-                todayMealMenuItems = []; todayMealBriefData = ''; renderTimelineSchedules(new Date());
+                if(isMealDate) renderApiError('meal-content', neisUserError(e,'급식'), fetchMeal);
+                if(isTimetableDate) { todayMealMenuItems = []; todayMealBriefData = ''; renderTimelineSchedules(requestedDate); }
             }
         }
 
-        async function fetchMeal() { return withRegionLoading("meal-content","급식 정보를 불러오는 중...",()=>fetchMealRequest()); }
+        async function fetchMeal(date = selectedMealDate, view = 'home') {
+            const target = view === 'timeline' ? 'timeline-wrapper' : 'meal-content';
+            return withRegionLoading(target, '급식 정보를 불러오는 중...', () => fetchMealRequest(date));
+        }
         async function fetchNeisSchedulesRequest() {
             try {
                 const today = new Date();
@@ -2497,12 +2608,13 @@
         }
 
         async function fetchNeisSchedules() { return withRegionLoading("home-schedule-list","학사일정을 불러오는 중...",()=>fetchNeisSchedulesRequest()); }
-        async function fetchNeisTimetableRequest() {
+        async function fetchNeisTimetableRequest(date = selectedDashboardDate) {
+            const requestedDate = date instanceof Date && !Number.isNaN(date.getTime()) ? new Date(date) : new Date(selectedDashboardDate);
+            requestedDate.setHours(12, 0, 0, 0);
+            const requestedDateKey = formatDate(requestedDate);
             const config = readUserConfig();
             if (!config || typeof config !== 'object') return;
-            
-            const today = new Date();
-            const ymd = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+            const ymd = `${requestedDate.getFullYear()}${String(requestedDate.getMonth() + 1).padStart(2, '0')}${String(requestedDate.getDate()).padStart(2, '0')}`;
             
             const regionCode = config.regionCode || DEFAULT_REGION_CODE;
             const schoolCode = config.schoolCode || DEFAULT_SCHOOL_CODE;
@@ -2511,6 +2623,7 @@
             
             try {
                 const result = await fetchCachedJson(url, "adk_timetable_"+regionCode+"_"+schoolCode+"_"+config.grade+"_"+config.class+"_"+ymd, v=>!!(v&&(v.RESULT?.CODE==="INFO-200"||(Array.isArray(v.hisTimetable)&&(!v.hisTimetable[1]||Array.isArray(v.hisTimetable[1].row))))), 1209600000); const data=result.data;
+                if(requestedDateKey !== formatDate(selectedDashboardDate)) return;
 
                 const container = document.getElementById('timetable-content');
                 dailyTimetableSchedules = []; 
@@ -2566,20 +2679,26 @@
                     container.querySelectorAll('[data-period]').forEach(card=>card.addEventListener('click',()=>handleTimetableSubjectClick(card.dataset.period,card.dataset.officialSubject||'')));
                     container.classList.toggle('timetable-subject-edit-mode',timetableEditMode);
                 } else {
-                    container.innerHTML = '<div class="col-span-2 text-white/50 text-center py-2">NEIS에 오늘 등록된 시간표가 없습니다.</div>';
+                    container.innerHTML = '<div class="col-span-2 text-white/50 text-center py-2">선택한 날짜에 등록된 시간표가 없습니다.</div>';
                 }
                 
-                renderTimelineSchedules(new Date());
+                renderTimelineSchedules(requestedDate);
 
             } catch (e) {
+                if(requestedDateKey !== formatDate(selectedDashboardDate)) return;
                 console.error(e);
                 renderApiError('timetable-content', neisUserError(e,'시간표'), fetchNeisTimetable);
             }
         }
 
         // --- 브리프 생성 및 업데이트 로직 ---
-        async function fetchNeisTimetable() { return withRegionLoading("timetable-content","시간표를 불러오는 중...",()=>fetchNeisTimetableRequest()); }
+        async function fetchNeisTimetable(date = selectedDashboardDate) {
+            const onScheduleTab = !document.getElementById('tab-timetable')?.classList.contains('hidden');
+            const target = onScheduleTab ? 'timeline-wrapper' : 'timetable-content';
+            return withRegionLoading(target, '시간표를 불러오는 중...', () => fetchNeisTimetableRequest(date));
+        }
         function updateBrief() {
+            if(formatDate(selectedDashboardDate) !== formatDate(new Date()) || formatDate(selectedMealDate) !== formatDate(new Date())) return;
             const now = new Date();
             const nowMinutes = now.getHours() * 60 + now.getMinutes();
             const todayStr = formatDate(now);
@@ -2752,6 +2871,7 @@
             const line = document.getElementById('current-time-line');
             if(!line) return;
             const now = new Date();
+            line.style.display = formatDate(selectedDashboardDate) === formatDate(now) ? '' : 'none';
             const topPos = (now.getHours() * 60) + now.getMinutes();
             line.style.top = `${topPos}px`;
         }
@@ -2759,7 +2879,6 @@
         function renderTimelineSchedules(date) {
             document.querySelectorAll('.timeline-event').forEach(el => el.remove());
             const dateStr = formatDate(date);
-            const todayStr = formatDate(new Date());
             
             const daySchedules = userCustomSchedules.filter(s => {
                 return dateStr >= s.date && dateStr <= (s.endDate || s.date);
@@ -2780,7 +2899,7 @@
                 addEventToTimeline(startH, startM, endH, endM, s.title, color, s.id, true);
             });
 
-            if (dateStr === todayStr && dailyTimetableSchedules.length > 0) {
+            if (dailyTimetableSchedules.length > 0) {
                 dailyTimetableSchedules.forEach(s => {
                     addEventToTimeline(s.sh, s.sm, s.eh, s.em, s.title, s.color, s.id, false);
                 });
@@ -2809,10 +2928,10 @@
 
                 const menu = document.createElement('div');
                 menu.className = 'timeline-meal-menu';
-                menu.setAttribute('aria-label', '오늘 급식 메뉴');
+                menu.setAttribute('aria-label', '선택한 날짜의 급식 메뉴');
                 const menuTitle = document.createElement('span');
                 menuTitle.className = 'timeline-meal-menu-title';
-                menuTitle.textContent = '오늘의 메뉴';
+                menuTitle.textContent = '급식 메뉴';
                 menu.appendChild(menuTitle);
                 const items = Array.isArray(todayMealMenuItems) ? todayMealMenuItems.filter(Boolean) : [];
                 const naturalWidth = Math.max(1, (slot.parentElement ? slot.parentElement.clientWidth : 320) - 20);
@@ -2859,7 +2978,7 @@
                 const label = document.createElement('span'); label.className = 'drop-shadow-sm line-clamp-2 text-xs w-full'; label.textContent = String(title); eventEl.appendChild(label);
             }
             if (isCustom) {
-                eventEl.onclick = () => openScheduleModal(selectedModalDate, id);
+                eventEl.onclick = () => openScheduleModal(selectedDashboardDate, id);
                 eventEl.setAttribute('aria-label', `일정 수정: ${title}`);
             } else {
                 eventEl.addEventListener('click', () => {
