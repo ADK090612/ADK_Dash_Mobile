@@ -124,6 +124,14 @@
         :root[data-theme="light"] .theme-picker { border-color:rgba(45,60,82,.14); background:rgba(255,255,255,.55); box-shadow:inset 0 1px 2px rgba(255,255,255,.8),0 8px 24px rgba(28,39,57,.08); }
         :root[data-theme="light"] .theme-choice { color:rgba(32,43,61,.62); }
         :root[data-theme="light"] .theme-choice[aria-pressed="true"] { color:#202b3d; background:rgba(255,255,255,.9); box-shadow:0 2px 8px rgba(28,39,57,.1); }
+        :root[data-theme="light"] .theme-picker.share-toggle-picker { border-color:rgba(255,255,255,.16); background:rgba(119,119,119,.96); box-shadow:inset 0 1px 2px rgba(255,255,255,.08),0 3px 10px rgba(28,39,57,.12); }
+        :root[data-theme="light"] .share-toggle-picker .theme-choice:not([aria-pressed="true"]) { color:rgba(255,255,255,.78); background:transparent; box-shadow:none; }
+        :root[data-theme="light"] .theme-picker.share-toggle-picker.is-off { border-color:rgba(255,255,255,.16); background:rgba(119,119,119,.96); box-shadow:inset 0 1px 2px rgba(255,255,255,.08),0 3px 10px rgba(28,39,57,.12); }
+        :root[data-theme="light"] .share-toggle-picker.is-off .theme-choice[aria-pressed="true"] { color:#f8fafc; background:rgba(31,36,46,.94); box-shadow:inset 0 1px 2px rgba(255,255,255,.12),0 2px 7px rgba(28,39,57,.16); }
+        :root[data-theme="light"] .share-toggle-picker.is-off .theme-choice:not([aria-pressed="true"]) { color:rgba(255,255,255,.78); }
+        .share-toggle-picker { padding:3px; gap:2px; }
+        .share-toggle-picker .theme-choice { min-width:48px; padding:6px 10px; font-size:.7rem; }
+        .share-setting-row { display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; padding:8px 0; }
         .pill { border-radius: 9999px; }
         .card { border-radius: 24px; }
 
@@ -321,34 +329,36 @@
         .region-loading-host.region-is-loading { min-height: 76px; }
         .region-loading-overlay { position: absolute; inset: 0; z-index: 35; display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 76px; border-radius: inherit; background: rgba(8,12,20,.72); backdrop-filter: blur(7px); -webkit-backdrop-filter: blur(7px); color: rgba(255,255,255,.82); font-size: .78rem; pointer-events: none; }
         .region-loading-overlay.list-loader { width: 100%; list-style: none; }
-        .region-loader-dots { position: relative; width: 42px; height: 42px; flex: 0 0 42px; animation: regionLoaderSpin 1.2s linear infinite; }
-        .region-loader-dot { position: absolute; width: 12px; height: 12px; border-radius: 50%; filter: drop-shadow(0 0 5px currentColor); animation: regionLoaderPulse 1s ease-in-out infinite; }
-        .region-loader-dot:nth-child(1) { left: 2px; top: 2px; color: #4b87ff; background: currentColor; }
-        .region-loader-dot:nth-child(2) { right: 2px; top: 2px; color: #70c9c4; background: currentColor; animation-delay: .15s; }
-        .region-loader-dot:nth-child(3) { right: 2px; bottom: 2px; color: #398fe0; background: currentColor; animation-delay: .3s; }
-        .region-loader-dot:nth-child(4) { left: 2px; bottom: 2px; color: #45c893; background: currentColor; animation-delay: .45s; }
-        @keyframes regionLoaderSpin { to { transform: rotate(360deg); } }
-        @keyframes regionLoaderPulse { 0%,100% { opacity: .72; transform: scale(.82); } 50% { opacity: 1; transform: scale(1.08); } }
+        .region-loader-dots { position: relative; width: 42px; height: 42px; flex: 0 0 42px; animation:regionLoaderRotate 2.64s linear infinite; }
+        .region-loader-dot { position: absolute; width: 12px; height: 12px; border-radius: 50%; opacity:.62; filter:blur(2px) drop-shadow(0 0 7px currentColor); animation:regionLoaderGather 3.3s cubic-bezier(.55,.05,.45,.95) infinite; }
+        .region-loader-dot:nth-child(1) { left: 2px; top: 2px; color: #4b87ff; background: currentColor; --merge-x:13px; --merge-y:13px; }
+        .region-loader-dot:nth-child(2) { right: 2px; top: 2px; color: #70c9c4; background: currentColor; --merge-x:-13px; --merge-y:13px; }
+        .region-loader-dot:nth-child(3) { right: 2px; bottom: 2px; color: #398fe0; background: currentColor; --merge-x:-13px; --merge-y:-13px; }
+        .region-loader-dot:nth-child(4) { left: 2px; bottom: 2px; color: #45c893; background: currentColor; --merge-x:13px; --merge-y:-13px; }
+        @keyframes regionLoaderGather {
+            0%, 50%, 100% { opacity:.62; filter:blur(2px) drop-shadow(0 0 7px currentColor); transform:translate(var(--merge-x),var(--merge-y)); }
+            23%, 73% { opacity:1; filter:blur(0) drop-shadow(0 0 5px currentColor); transform:translate(0,0); }
+        }
+        @keyframes regionLoaderRotate { to { transform:rotate(360deg); } }
         :root[data-theme="light"] .region-loading-overlay { color: rgba(32,43,61,.82); background: rgba(245,247,250,.76); }
-        @media (prefers-reduced-motion: reduce) { .region-loader-dots, .region-loader-dot { animation-duration: 2s; } }
         .initial-loading-overlay { position: fixed; inset: 0; z-index: 180; place-items: center; padding: 0; background: transparent; }
         .initial-loading-overlay:not(.hidden) { display: grid; }
-        @media (prefers-reduced-motion: reduce) { .region-loader-dots, .region-loader-dot { animation: none; } }
-        .ui-checkbox { appearance: none; -webkit-appearance: none; width: 18px; height: 18px; flex: 0 0 18px; margin: 0; border: 1px solid rgba(255,255,255,.34); border-radius: 6px; background: rgba(255,255,255,.07); display: inline-grid; place-content: center; cursor: pointer; transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
-        .ui-checkbox:checked { border-color: rgba(110,231,183,.9); background-color: rgba(16,185,129,.78); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m3 8 3.2 3.2L13 4.5' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-position: center; background-repeat: no-repeat; background-size: 13px; box-shadow: 0 0 0 2px rgba(16,185,129,.12), inset 0 1px 1px rgba(255,255,255,.2); }
+        @media (prefers-reduced-motion: reduce) { .region-loader-dots, .region-loader-dot { animation: none; opacity:1; filter:drop-shadow(0 0 5px currentColor); transform:translate(0,0); } }
+        .ui-checkbox { appearance: none; -webkit-appearance: none; width: 20px; height: 20px; flex: 0 0 20px; margin: 0; border: 1px solid rgba(255,255,255,.4); border-radius: 50%; background: rgba(255,255,255,.075); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); display: inline-grid; place-content: center; cursor: pointer; transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
+        .ui-checkbox:checked { border-color: rgba(167,243,208,.8); background-color: rgba(52,211,153,.28); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m3 8 3.2 3.2L13 4.5' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"), linear-gradient(135deg, rgba(52,211,153,.72), rgba(59,130,246,.72)); background-position: center, center; background-repeat: no-repeat; background-size: 12px 12px, 100% 100%; box-shadow: 0 0 0 2px rgba(59,130,246,.12), inset 0 1px 2px rgba(255,255,255,.38), 0 2px 8px rgba(0,0,0,.12); }
         .ui-checkbox:active { transform: scale(.9); }
         .ui-checkbox:focus-visible { outline: 2px solid rgba(110,231,183,.75); outline-offset: 3px; }
-        .check-option { display: flex; align-items: center; gap: 9px; min-height: 38px; padding: 7px 11px; border: 1px solid rgba(255,255,255,.11); border-radius: 9999px; background: rgba(255,255,255,.045); color: rgba(255,255,255,.88); cursor: pointer; transition: background-color .2s ease, border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
-        .check-option:hover { background: rgba(255,255,255,.09); border-color: rgba(255,255,255,.2); }
-        .check-option.is-selected { border-color: rgba(110,231,183,.35); background: rgba(16,185,129,.1); box-shadow: inset 0 1px 5px rgba(16,185,129,.06); }
-        .check-option:active { transform: scale(.985); }
+        .check-option { display: flex; align-items: center; gap: 9px; min-height: 38px; padding: 7px 11px; border: 1px solid rgba(255,255,255,.11); border-radius: 9999px; background: rgba(255,255,255,.045); color: rgba(255,255,255,.88); cursor: pointer; }
         .preference-option { font-size: .82rem; line-height: 1.35; }
         .allergy-option { min-height: 40px; border-radius: 14px; padding: 7px 9px; font-size: .82rem; }
         :root[data-theme="light"] .check-option { color: #263247; border-color: rgba(45,60,82,.13); background: rgba(255,255,255,.48); }
-        :root[data-theme="light"] .check-option:hover { background: rgba(255,255,255,.8); border-color: rgba(45,60,82,.22); }
-        :root[data-theme="light"] .check-option.is-selected { border-color: rgba(5,150,105,.32); background: rgba(16,185,129,.1); }
-        :root[data-theme="light"] .ui-checkbox { border-color: rgba(45,60,82,.3); background-color: rgba(255,255,255,.8); }
-        :root[data-theme="light"] .ui-checkbox:checked { border-color: #059669; background-color: #059669; }
+        :root[data-theme="light"] .ui-checkbox { border-color: rgba(45,60,82,.32); background-color: rgba(255,255,255,.62); box-shadow: inset 0 1px 2px rgba(255,255,255,.72), 0 2px 6px rgba(28,39,57,.08); }
+        :root[data-theme="light"] .ui-checkbox:checked { border-color: rgba(111,124,143,.62); background-color: rgba(220,225,232,.72); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m3 8 3.2 3.2L13 4.5' fill='none' stroke='%23324359' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"), linear-gradient(135deg, rgba(255,255,255,.94), rgba(166,177,193,.78)); box-shadow: inset 0 1px 2px rgba(255,255,255,.88), 0 2px 7px rgba(28,39,57,.16); }
+        .schedule-title-char { display:inline-block; white-space:pre; opacity:1; transition:opacity .18s ease, transform .18s ease; }
+        .schedule-title-char.is-leaving { opacity:0; transform:translateY(-3px); }
+        .schedule-title-char.is-entering { opacity:0; transform:translateY(4px); }
+        .schedule-title-char.is-entering.is-visible { opacity:1; transform:translateY(0); }
+        @media (prefers-reduced-motion: reduce) { .schedule-title-char { transition-duration:.01ms; } }
     </style>
     <script>
         try { const initialTheme = localStorage.getItem('adkTheme') === 'light' ? 'light' : 'dark'; document.documentElement.dataset.theme = initialTheme; } catch (error) {}
@@ -597,9 +607,9 @@
                     <div class="px-5 py-4 border-t border-white/10">
                         <div class="font-medium">일일 스케줄 공유 항목</div>
                         <div class="text-white/50 text-xs mt-1 mb-3">일정표에는 오늘의 급식 메뉴가 포함됩니다.</div>
-                        <div class="flex flex-wrap gap-x-5 gap-y-2 text-sm">
-                            <label class="check-option preference-option"><input id="share-include-assessments" type="checkbox" class="ui-checkbox"><span>오늘의 수행평가 (이름·과목·메모·완료 여부)</span></label>
-                            <label class="check-option preference-option"><input id="share-include-weather" type="checkbox" class="ui-checkbox"><span>현재 날씨</span></label>
+                        <div class="flex flex-col text-sm">
+                            <div class="share-setting-row"><span>오늘의 수행평가 (이름·과목·메모·완료 여부)</span><div class="theme-picker share-toggle-picker" role="group" aria-label="수행평가 공유"><button type="button" class="theme-choice" data-share-target="share-include-assessments" data-share-value="on" aria-pressed="false">ON</button><button type="button" class="theme-choice" data-share-target="share-include-assessments" data-share-value="off" aria-pressed="true">OFF</button></div><input id="share-include-assessments" type="checkbox" class="sr-only" tabindex="-1" aria-hidden="true"></div>
+                            <div class="share-setting-row"><span>현재 날씨</span><div class="theme-picker share-toggle-picker" role="group" aria-label="날씨 공유"><button type="button" class="theme-choice" data-share-target="share-include-weather" data-share-value="on" aria-pressed="false">ON</button><button type="button" class="theme-choice" data-share-target="share-include-weather" data-share-value="off" aria-pressed="true">OFF</button></div><input id="share-include-weather" type="checkbox" class="sr-only" tabindex="-1" aria-hidden="true"></div>
                         </div>
                     </div>
                 </div>
@@ -978,7 +988,7 @@
 
         function localDayKey(d=new Date()){return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");}
         let assessmentTasks=safeStoredArray("assessmentTasks",x=>x&&typeof x.id==="string"&&typeof x.title==="string"&&x.title.length<=160&&isValidISODate(x.dueDate)).map(x=>({...x,subject:typeof x.subject==="string"?x.subject.slice(0,100):"",note:typeof x.note==="string"?x.note.slice(0,1000):"",done:!!x.done}));
-        function renderAssessmentTasks(){const ul=document.getElementById("assessment-task-list");if(!ul)return;ul.replaceChildren();const today=localDayKey();assessmentTasks.sort((a,b)=>Number(!!a.done)-Number(!!b.done)||a.dueDate.localeCompare(b.dueDate));if(!assessmentTasks.length){const e=document.createElement("li");e.className="text-sm text-white/50";e.textContent="등록된 수행평가가 없습니다.";ul.append(e);return;}assessmentTasks.forEach(t=>{const li=document.createElement("li");li.className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2";const cb=document.createElement("input");cb.type="checkbox";cb.checked=!!t.done;cb.setAttribute("aria-label",t.title+" 완료");cb.addEventListener("change",()=>{t.done=cb.checked;persistAssessmentTasks();});const b=document.createElement("button");b.type="button";b.className="min-w-0 flex-1 text-left";b.addEventListener("click",()=>openAssessmentModal(t.id));const name=document.createElement("span");name.className="block truncate text-sm font-semibold";name.textContent=t.title;const meta=document.createElement("span");meta.className="block text-xs text-white/50";meta.textContent=(t.subject?t.subject+" · ":"")+t.dueDate+(!t.done&&t.dueDate<today?" · 마감 지남":"");b.append(name,meta);if(t.note){const note=document.createElement("span");note.className="block text-xs text-white/70 mt-1 line-clamp-2";note.textContent=t.note;b.appendChild(note);}const del=document.createElement("button");del.type="button";del.textContent="삭제";del.className="text-xs text-white/50";del.addEventListener("click",()=>{assessmentTasks=assessmentTasks.filter(x=>x.id!==t.id);persistAssessmentTasks();});li.append(cb,b,del);ul.append(li);});}
+        function renderAssessmentTasks(){const ul=document.getElementById("assessment-task-list");if(!ul)return;ul.replaceChildren();const today=localDayKey();assessmentTasks.sort((a,b)=>Number(!!a.done)-Number(!!b.done)||a.dueDate.localeCompare(b.dueDate));if(!assessmentTasks.length){const e=document.createElement("li");e.className="text-sm text-white/50";e.textContent="등록된 수행평가가 없습니다.";ul.append(e);return;}assessmentTasks.forEach(t=>{const li=document.createElement("li");li.className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2";const cb=document.createElement("input");cb.type="checkbox";cb.className="ui-checkbox";cb.checked=!!t.done;cb.setAttribute("aria-label",t.title+" 완료");cb.addEventListener("change",()=>{t.done=cb.checked;persistAssessmentTasks();});const b=document.createElement("button");b.type="button";b.className="min-w-0 flex-1 text-left";b.addEventListener("click",()=>openAssessmentModal(t.id));const name=document.createElement("span");name.className="block truncate text-sm font-semibold";name.textContent=t.title;const meta=document.createElement("span");meta.className="block text-xs text-white/50";meta.textContent=(t.subject?t.subject+" · ":"")+t.dueDate+(!t.done&&t.dueDate<today?" · 마감 지남":"");b.append(name,meta);if(t.note){const note=document.createElement("span");note.className="block text-xs text-white/70 mt-1 line-clamp-2";note.textContent=t.note;b.appendChild(note);}const del=document.createElement("button");del.type="button";del.textContent="삭제";del.className="text-xs text-white/50";del.addEventListener("click",()=>{assessmentTasks=assessmentTasks.filter(x=>x.id!==t.id);persistAssessmentTasks();});li.append(cb,b,del);ul.append(li);});}
         function persistAssessmentTasks(){try{localStorage.setItem("assessmentTasks",JSON.stringify(assessmentTasks));renderAssessmentTasks();renderExamDdayWidget();return true;}catch(e){showCustomModal({message:"저장 공간이 부족해 저장하지 못했습니다."});return false;}}
         function openAssessmentModal(id=""){const t=assessmentTasks.find(x=>x.id===id);document.getElementById("assessment-form").reset();document.getElementById("assessment-edit-id").value=t?t.id:"";document.getElementById("assessment-title").value=t?t.title:"";document.getElementById("assessment-subject").value=t?(t.subject||""):"";document.getElementById("assessment-note").value=t?(t.note||""):"";document.getElementById("assessment-due").value=t?t.dueDate:localDayKey();document.getElementById("assessment-heading-modal").textContent=t?"수행평가 수정":"수행평가 추가";const m=document.getElementById("assessment-modal");m.classList.remove("hidden");requestAnimationFrame(()=>m.classList.remove("opacity-0"));}
         function closeAssessmentModal(){const m=document.getElementById("assessment-modal");m.classList.add("opacity-0");setTimeout(()=>m.classList.add("hidden"),300);}
@@ -1009,6 +1019,34 @@
         let timetableEditMode = false;
         function readTimetableOverrides() { try { const value=JSON.parse(localStorage.getItem('customTimetableOverrides')||'{}'); return value&&typeof value==='object'&&!Array.isArray(value)?value:{}; } catch (_) { return {}; } }
         function timetableOverrideKey(period, config=null) { const user=config || readUserConfig(); return `${user?.regionCode||DEFAULT_REGION_CODE}:${user?.schoolCode||DEFAULT_SCHOOL_CODE}:${user?.grade||''}:${user?.class||''}:${selectedDashboardDate.getDay()}:${period}`; }
+        function animateScheduleTitle(title, text) {
+            if(!title || title.textContent === text) return;
+            const token = Number(title.dataset.titleAnimation || 0) + 1;
+            title.dataset.titleAnimation = String(token);
+            title.setAttribute('aria-label', text);
+            if(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) { title.textContent = text; return; }
+            const makeCharacters = (value, className) => Array.from(value, character => {
+                const span = document.createElement('span');
+                span.className = `schedule-title-char ${className}`;
+                span.textContent = character === ' ' ? '\u00a0' : character;
+                span.setAttribute('aria-hidden', 'true');
+                return span;
+            });
+            const outgoing = makeCharacters(title.textContent, '');
+            title.replaceChildren(...outgoing);
+            requestAnimationFrame(() => outgoing.forEach((span, index) => setTimeout(() => {
+                if(title.dataset.titleAnimation === String(token)) span.classList.add('is-leaving');
+            }, index * 12)));
+            const exitDuration = 190 + Math.min(outgoing.length * 12, 120);
+            setTimeout(() => {
+                if(title.dataset.titleAnimation !== String(token)) return;
+                const incoming = makeCharacters(text, 'is-entering');
+                title.replaceChildren(...incoming);
+                requestAnimationFrame(() => incoming.forEach((span, index) => setTimeout(() => {
+                    if(title.dataset.titleAnimation === String(token)) span.classList.add('is-visible');
+                }, index * 24)));
+            }, exitDuration);
+        }
         function toggleTimetableEditMode() {
             timetableEditMode=!timetableEditMode;
             const button=document.getElementById('timetable-action-edit'); const content=document.getElementById('timetable-content'); const title=document.getElementById('timetable-title');
@@ -1016,7 +1054,7 @@
             actions?.classList.toggle('timetable-editing',timetableEditMode);
             setBottomNavEditHidden(timetableEditMode);
             if(timetableEditMode) closeTimetableShareMenu();
-            button.setAttribute('aria-pressed',String(timetableEditMode)); title.textContent=timetableEditMode?'스케줄 편집':'일일 스케줄';
+            button.setAttribute('aria-pressed',String(timetableEditMode)); animateScheduleTitle(title,timetableEditMode?'스케줄 편집':'일일 스케줄');
             button.title=timetableEditMode?'편집 완료':'과목 수정'; button.setAttribute('aria-label',button.title);
             button.innerHTML=timetableEditMode
                 ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>'
@@ -1072,10 +1110,19 @@
         const timetableShareOptionsKey = "adkTimetableShareOptions";
         function getTimetableShareOptions() { try { const value=JSON.parse(localStorage.getItem(timetableShareOptionsKey)||"{}"); return {assessments:!!value.assessments,weather:!!value.weather}; } catch (_) { return {assessments:false,weather:false}; } }
         function saveTimetableShareOptions() { const options={assessments:!!document.getElementById("share-include-assessments")?.checked,weather:!!document.getElementById("share-include-weather")?.checked}; try { localStorage.setItem(timetableShareOptionsKey,JSON.stringify(options)); } catch (_) { showCustomModal({message:"공유 항목 설정을 저장하지 못했습니다."}); } }
-        function syncCheckOption(input) { input.closest('.check-option')?.classList.toggle('is-selected',input.checked); }
+        function syncShareToggle(input) {
+            input.closest('.share-setting-row')?.querySelector('.share-toggle-picker')?.classList.toggle('is-off', !input.checked);
+            document.querySelectorAll('[data-share-target]').forEach(button => {
+                if(button.dataset.shareTarget === input.id) button.setAttribute('aria-pressed', String((button.dataset.shareValue === 'on') === input.checked));
+            });
+        }
         function initTimetableShareOptions() {
             const options=getTimetableShareOptions(), assessments=document.getElementById("share-include-assessments"), weather=document.getElementById("share-include-weather");
-            [ [assessments,options.assessments], [weather,options.weather] ].forEach(([input,checked])=>{if(!input)return;input.checked=checked;syncCheckOption(input);input.addEventListener("change",()=>{syncCheckOption(input);saveTimetableShareOptions();});});
+            [ [assessments,options.assessments], [weather,options.weather] ].forEach(([input,checked])=>{if(!input)return;input.checked=checked;syncShareToggle(input);input.addEventListener("change",()=>{syncShareToggle(input);saveTimetableShareOptions();});});
+            document.querySelectorAll('[data-share-target]').forEach(button=>button.addEventListener('click',()=>{
+                const input=document.getElementById(button.dataset.shareTarget); if(!input)return;
+                input.checked=button.dataset.shareValue==='on'; input.dispatchEvent(new Event('change',{bubbles:true}));
+            }));
         }
         async function createTimetableImageBlob() {
             let entries=Array.isArray(dailyTimetableSchedules)?[...dailyTimetableSchedules]:[];
@@ -1858,7 +1905,6 @@
                 `;
             }
             list.innerHTML = html;
-            list.querySelectorAll('.allergy-cb').forEach(input=>{syncCheckOption(input);input.addEventListener('change',()=>syncCheckOption(input));});
 
             const overlay = document.getElementById('allergy-modal-overlay');
             const box = document.getElementById('allergy-modal-box');
