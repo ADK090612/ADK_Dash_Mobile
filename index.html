@@ -107,6 +107,10 @@
         .action-button:active { transform:scale(.97); }
         .date-stepper { display:inline-flex; align-items:center; gap:4px; flex-shrink:0; }
         .date-stepper .date-stepper-arrow { width:34px; height:34px; padding:0; font-size:1.2rem; line-height:1; }
+        .date-stepper .date-stepper-arrow { position:relative; font-size:0; }
+        .date-stepper .date-stepper-arrow::before { content:''; display:block; width:8px; height:8px; border-top:2px solid currentColor !important; border-right:2px solid currentColor !important; }
+        .date-stepper .date-stepper-prev::before { transform:translateX(2px) rotate(-135deg); }
+        .date-stepper .date-stepper-next::before { transform:translateX(-2px) rotate(45deg); }
         .date-stepper .date-stepper-today { padding:7px 11px; font-size:.72rem; font-weight:600; }
         .date-stepper-label { min-width:104px; text-align:center; color:rgba(255,255,255,.78); font-size:.76rem; white-space:nowrap; }
         :root[data-theme="light"] .date-stepper-label { color:rgba(32,43,61,.78); }
@@ -116,20 +120,26 @@
         .timetable-toolbar-button:focus-visible { outline: 2px solid rgba(148,163,184,.7); outline-offset: 3px; }
         :root[data-theme="light"] .timetable-toolbar-button { color: #202b3d; background: rgba(24,31,43,.08); border-color: rgba(45,60,82,.18); box-shadow: 0 7px 17px rgba(0,0,0,.22); }
         :root[data-theme="light"] .timetable-toolbar-button:hover { background: rgba(24,31,43,.12) !important; box-shadow: 0 8px 19px rgba(0,0,0,.25); }
-        .theme-picker { display:inline-flex; gap:3px; padding:4px; border:1px solid rgba(255,255,255,.22); background:rgba(255,255,255,.08); border-radius:9999px; backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); box-shadow:inset 0 1px 2px rgba(255,255,255,.1),0 8px 24px rgba(0,0,0,.12); }
-        .theme-choice { min-width:72px; display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:8px 12px; border-radius:9999px; color:rgba(255,255,255,.68); font-size:.78rem; font-weight:600; transition:color .2s,background .2s,box-shadow .2s; }
-        .theme-choice[aria-pressed="true"] { color:#fff; background:rgba(255,255,255,.2); box-shadow:inset 0 1px 1px rgba(255,255,255,.16),0 2px 8px rgba(0,0,0,.12); }
+        .theme-picker { position:relative; isolation:isolate; display:inline-flex; gap:3px; padding:4px; border:1px solid rgba(255,255,255,.22); background:rgba(255,255,255,.08); border-radius:9999px; backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); box-shadow:inset 0 1px 2px rgba(255,255,255,.1),0 8px 24px rgba(0,0,0,.12); touch-action:pan-y; }
+        .theme-picker-indicator { position:absolute; z-index:0; top:4px; bottom:4px; left:4px; width:0; border-radius:9999px; background:rgba(255,255,255,.2); box-shadow:inset 0 1px 1px rgba(255,255,255,.16),0 2px 8px rgba(0,0,0,.12); pointer-events:none; transition:left .22s cubic-bezier(.2,.75,.25,1),width .22s cubic-bezier(.2,.75,.25,1),background .2s,box-shadow .2s; }
+        .theme-choice { position:relative; z-index:1; min-width:72px; display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:8px 12px; border-radius:9999px; color:rgba(255,255,255,.68); font-size:.78rem; font-weight:600; transition:color .2s,background .2s,box-shadow .2s; }
+        .theme-picker > .theme-choice[aria-pressed="true"] { background:transparent; box-shadow:none; }
         .theme-choice svg { width:15px; height:15px; }
         #onboarding-theme-picker { position:absolute; top:max(20px,env(safe-area-inset-top)); right:20px; z-index:60; }
         :root[data-theme="light"] .theme-picker { border-color:rgba(45,60,82,.14); background:rgba(255,255,255,.55); box-shadow:inset 0 1px 2px rgba(255,255,255,.8),0 8px 24px rgba(28,39,57,.08); }
+        :root[data-theme="light"] .theme-picker-indicator { background:rgba(255,255,255,.9); box-shadow:0 2px 8px rgba(28,39,57,.1); }
+        :root[data-theme="light"] .theme-picker.share-toggle-picker .theme-picker-indicator { background:rgba(255,255,255,.9); box-shadow:0 2px 8px rgba(28,39,57,.1); }
+        :root[data-theme="light"] .theme-picker.share-toggle-picker.is-off .theme-picker-indicator { background:rgba(31,36,46,.94); box-shadow:inset 0 1px 2px rgba(255,255,255,.12),0 2px 7px rgba(28,39,57,.16); }
         :root[data-theme="light"] .theme-choice { color:rgba(32,43,61,.62); }
-        :root[data-theme="light"] .theme-choice[aria-pressed="true"] { color:#202b3d; background:rgba(255,255,255,.9); box-shadow:0 2px 8px rgba(28,39,57,.1); }
+        :root[data-theme="light"] .theme-choice[aria-pressed="true"] { color:#202b3d; }
         :root[data-theme="light"] .theme-picker.share-toggle-picker { border-color:rgba(255,255,255,.16); background:rgba(119,119,119,.96); box-shadow:inset 0 1px 2px rgba(255,255,255,.08),0 3px 10px rgba(28,39,57,.12); }
         :root[data-theme="light"] .share-toggle-picker .theme-choice:not([aria-pressed="true"]) { color:rgba(255,255,255,.78); background:transparent; box-shadow:none; }
         :root[data-theme="light"] .theme-picker.share-toggle-picker.is-off { border-color:rgba(255,255,255,.16); background:rgba(119,119,119,.96); box-shadow:inset 0 1px 2px rgba(255,255,255,.08),0 3px 10px rgba(28,39,57,.12); }
-        :root[data-theme="light"] .share-toggle-picker.is-off .theme-choice[aria-pressed="true"] { color:#f8fafc; background:rgba(31,36,46,.94); box-shadow:inset 0 1px 2px rgba(255,255,255,.12),0 2px 7px rgba(28,39,57,.16); }
+        :root[data-theme="light"] .share-toggle-picker.is-off .theme-choice[aria-pressed="true"] { color:#f8fafc; }
         :root[data-theme="light"] .share-toggle-picker.is-off .theme-choice:not([aria-pressed="true"]) { color:rgba(255,255,255,.78); }
+        .theme-picker { border-color:transparent; }
         .share-toggle-picker { padding:3px; gap:2px; }
+        .share-toggle-picker .theme-picker-indicator { top:3px; bottom:3px; }
         .share-toggle-picker .theme-choice { min-width:48px; padding:6px 10px; font-size:.7rem; }
         .share-setting-row { display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; padding:8px 0; }
         .pill { border-radius: 9999px; }
@@ -184,6 +194,10 @@
         .timeline-event:hover { transform: scale(1.02); z-index: 20; }
         .timeline-event.timeline-meal-event { background: transparent !important; border: 0 !important; box-shadow: none !important; backdrop-filter: none; padding: 0; display: flex; align-items: stretch; gap: 6px; overflow: visible; }
         .timeline-event.timeline-meal-event:hover { transform: none; }
+        .timeline-assessment-event { background: transparent !important; border: 0 !important; box-shadow: none !important; backdrop-filter: none; padding: 0; display: flex; align-items: stretch; gap: 6px; overflow: visible; }
+        .timeline-assessment-event:hover { transform: none; }
+        .timeline-assessment-main { flex: 0 0 39%; min-width: 0; display: flex; align-items: center; padding: 6px 9px; border-radius: 12px; background: rgba(99,102,241,.2); color: #eef2ff; }
+        .timeline-assessment-panel { flex: 1 1 auto; min-width: 0; height: 100%; overflow: hidden; padding: 6px 9px; border-radius: 12px; background: rgba(49,46,129,.78); color: rgba(255,255,255,.94); }
         .timeline-meal-main { flex: 0 0 39%; min-width: 0; display: flex; align-items: center; padding: 6px 9px; border: 1px solid rgba(255,255,255,.22); border-radius: 12px; background: rgba(34,197,94,.17); backdrop-filter: blur(10px); color: #f0fdf4; box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 4px 12px rgba(0,0,0,.12); }
         .timeline-meal-menu { flex: 0 0 auto; min-width: 0; height: 100%; overflow: hidden; padding: 6px 9px; border: 1px solid rgba(255,255,255,.2); border-radius: 12px; background: rgba(15,23,42,.82); backdrop-filter: blur(14px); color: rgba(255,255,255,.9); box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 6px 16px rgba(0,0,0,.2); }
         .timeline-meal-menu-list { display: grid; flex: 1 1 auto; min-height: 0; grid-auto-flow: column; align-content: start; gap: 1px 10px; overflow: hidden; }
@@ -196,6 +210,8 @@
         #timeline-wrapper.timetable-subject-edit-mode .timeline-meal-event { background: rgba(148,163,184,.14) !important; border-radius: 14px; }
         :root[data-theme="light"] .timeline-meal-main { color: #263247; background: rgba(34,197,94,.14); border-color: rgba(45,60,82,.2); }
         :root[data-theme="light"] .timeline-meal-menu { background: rgba(32,43,61,.86); color: rgba(255,255,255,.94); border-color: rgba(255,255,255,.22); }
+        :root[data-theme="light"] .timeline-assessment-main { color: #263247; background: rgba(99,102,241,.14); }
+        :root[data-theme="light"] .timeline-assessment-panel { background: rgba(49,46,129,.86); color: rgba(255,255,255,.96); }
         
         /* 현재 시간 레드 라인 */
         #current-time-line {
@@ -358,8 +374,18 @@
         .schedule-title-char.is-leaving { opacity:0; transform:translateY(-3px); }
         .schedule-title-char.is-entering { opacity:0; transform:translateY(4px); }
         .schedule-title-char.is-entering.is-visible { opacity:1; transform:translateY(0); }
+        .welcome-text-char { transition-duration:.54s; }
         @media (prefers-reduced-motion: reduce) { .schedule-title-char { transition-duration:.01ms; } }
-    </style>
+    
+        /* 모든 박스와 버튼의 테두리 및 외곽선 제거 */
+        *, *::before, *::after { border: 0 !important; outline: none !important; }
+        #bottom-navigation, #bottom-navigation .nav-item, #nav-indicator { border: 0 !important; outline: none !important; box-shadow: none !important; }
+        :root[data-theme="light"] #bottom-navigation { box-shadow: 0 10px 30px rgba(0,0,0,.3) !important; }
+        #tab-account .liquid-glass.card > div[onclick] { border-bottom: 0 !important; background-image: linear-gradient(rgba(255,255,255,.14), rgba(255,255,255,.14)); background-size: calc(100% - 2.5rem) 1px; background-position: center bottom; background-repeat: no-repeat; }
+        :root[data-theme="light"] #tab-account .liquid-glass.card > div[onclick] { background-image: linear-gradient(rgba(45,60,82,.12), rgba(45,60,82,.12)); }
+        #timeline-wrapper .time-slot { border-top: 1px solid rgba(255,255,255,.14) !important; }
+        :root[data-theme="light"] #timeline-wrapper .time-slot { border-top-color: rgba(45,60,82,.12) !important; }
+</style>
     <script>
         try { const initialTheme = localStorage.getItem('adkTheme') === 'light' ? 'light' : 'dark'; document.documentElement.dataset.theme = initialTheme; } catch (error) {}
     </script>
@@ -490,9 +516,9 @@
                 <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
                     <h3 class="text-lg font-semibold anim-text d-2">시간표 ⏰</h3>
                     <div class="date-stepper" aria-label="시간표와 급식 날짜 선택">
-                        <button type="button" class="action-button date-stepper-arrow" onclick="shiftDashboardDate(-1)" aria-label="전날" title="전날">‹</button>
+                        <button type="button" class="action-button date-stepper-arrow date-stepper-prev" onclick="shiftDashboardDate(-1)" aria-label="전날" title="전날"></button>
                         <span id="home-selected-date" class="date-stepper-label" aria-live="polite"></span>
-                        <button type="button" class="action-button date-stepper-arrow" onclick="shiftDashboardDate(1)" aria-label="다음 날" title="다음 날">›</button>
+                        <button type="button" class="action-button date-stepper-arrow date-stepper-next" onclick="shiftDashboardDate(1)" aria-label="다음 날" title="다음 날"></button>
                         <button type="button" class="action-button date-stepper-today" onclick="goToDashboardToday()">오늘</button>
                     </div>
                 </div>
@@ -506,8 +532,8 @@
                     <div class="flex items-center gap-2 min-w-0"><h3 class="text-lg font-semibold anim-text d-2">급식 🍱</h3><span id="home-meal-date" class="date-stepper-label"></span></div>
                     <div class="flex items-center gap-2">
                         <div class="date-stepper" aria-label="급식 날짜 선택">
-                            <button type="button" class="action-button date-stepper-arrow" onclick="shiftMealDate(-1)" aria-label="급식 전날" title="전날">‹</button>
-                            <button type="button" class="action-button date-stepper-arrow" onclick="shiftMealDate(1)" aria-label="급식 다음 날" title="다음 날">›</button>
+                            <button type="button" class="action-button date-stepper-arrow date-stepper-prev" onclick="shiftMealDate(-1)" aria-label="급식 전날" title="전날"></button>
+                            <button type="button" class="action-button date-stepper-arrow date-stepper-next" onclick="shiftMealDate(1)" aria-label="급식 다음 날" title="다음 날"></button>
                             <button type="button" class="action-button date-stepper-today" onclick="goToMealToday()">오늘</button>
                         </div>
                         <button onclick="showAllergyInfo()" class="text-xs text-white/80 bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition active:scale-95">알러지 정보 표시</button>
@@ -529,9 +555,9 @@
             <div class="flex flex-wrap justify-between items-center gap-2 mb-4 shrink-0 anim-box">
                 <h2 id="timetable-title" class="text-2xl font-bold drop-shadow-md anim-text">일일 스케줄</h2>
                 <div class="date-stepper" aria-label="스케줄 날짜 선택">
-                    <button type="button" class="action-button date-stepper-arrow" onclick="shiftDashboardDate(-1)" aria-label="전날" title="전날">‹</button>
+                    <button type="button" class="action-button date-stepper-arrow date-stepper-prev" onclick="shiftDashboardDate(-1)" aria-label="전날" title="전날"></button>
                     <span id="schedule-selected-date" class="date-stepper-label" aria-live="polite"></span>
-                    <button type="button" class="action-button date-stepper-arrow" onclick="shiftDashboardDate(1)" aria-label="다음 날" title="다음 날">›</button>
+                    <button type="button" class="action-button date-stepper-arrow date-stepper-next" onclick="shiftDashboardDate(1)" aria-label="다음 날" title="다음 날"></button>
                     <button type="button" class="action-button date-stepper-today" onclick="goToDashboardToday()">오늘</button>
                 </div>
             </div>
@@ -992,7 +1018,7 @@
         function persistAssessmentTasks(){try{localStorage.setItem("assessmentTasks",JSON.stringify(assessmentTasks));renderAssessmentTasks();renderExamDdayWidget();return true;}catch(e){showCustomModal({message:"저장 공간이 부족해 저장하지 못했습니다."});return false;}}
         function openAssessmentModal(id=""){const t=assessmentTasks.find(x=>x.id===id);document.getElementById("assessment-form").reset();document.getElementById("assessment-edit-id").value=t?t.id:"";document.getElementById("assessment-title").value=t?t.title:"";document.getElementById("assessment-subject").value=t?(t.subject||""):"";document.getElementById("assessment-note").value=t?(t.note||""):"";document.getElementById("assessment-due").value=t?t.dueDate:localDayKey();document.getElementById("assessment-heading-modal").textContent=t?"수행평가 수정":"수행평가 추가";const m=document.getElementById("assessment-modal");m.classList.remove("hidden");requestAnimationFrame(()=>m.classList.remove("opacity-0"));}
         function closeAssessmentModal(){const m=document.getElementById("assessment-modal");m.classList.add("opacity-0");setTimeout(()=>m.classList.add("hidden"),300);}
-        function saveAssessmentTask(e){e.preventDefault();const title=document.getElementById("assessment-title").value.trim().slice(0,160),subject=document.getElementById("assessment-subject").value.trim().slice(0,100),note=document.getElementById("assessment-note").value.trim().slice(0,1000),dueDate=document.getElementById("assessment-due").value,id=document.getElementById("assessment-edit-id").value;if(!title||!isValidISODate(dueDate)){showCustomModal({message:"내용과 올바른 마감일을 입력해주세요."});return;}const t={id:id||("task_"+Date.now()),title,subject,note,dueDate,done:!!assessmentTasks.find(x=>x.id===id)?.done};if(id)assessmentTasks=assessmentTasks.map(x=>x.id===id?t:x);else assessmentTasks.push(t);if(persistAssessmentTasks()){closeAssessmentModal();checkAssessmentNotifications();}}
+        function saveAssessmentTask(e){e.preventDefault();const title=document.getElementById("assessment-title").value.trim().slice(0,160),subject=document.getElementById("assessment-subject").value.trim().slice(0,100),note=document.getElementById("assessment-note").value.trim().slice(0,1000),dueDate=document.getElementById("assessment-due").value,id=document.getElementById("assessment-edit-id").value;if(!title||!isValidISODate(dueDate)){showCustomModal({message:"내용과 올바른 마감일을 입력해주세요."});return;}const t={id:id||("task_"+Date.now()),title,subject,note,dueDate,done:!!assessmentTasks.find(x=>x.id===id)?.done};if(id)assessmentTasks=assessmentTasks.map(x=>x.id===id?t:x);else assessmentTasks.push(t);if(persistAssessmentTasks()){closeAssessmentModal();renderTimelineSchedules(selectedDashboardDate);checkAssessmentNotifications();}}
         function renderExamDdayWidget() {
             const host=document.getElementById('home-dday-list'); if(!host) return;
             host.replaceChildren(); const today=localDayKey(); const tomorrowDate=new Date(); tomorrowDate.setDate(tomorrowDate.getDate()+1); const tomorrow=localDayKey(tomorrowDate);
@@ -1046,6 +1072,40 @@
                     if(title.dataset.titleAnimation === String(token)) span.classList.add('is-visible');
                 }, index * 24)));
             }, exitDuration);
+        }
+        let welcomeTextAnimationTimer = null;
+        function animateWelcomeText() {
+            const welcome = document.getElementById('welcome-text');
+            if (!welcome) return;
+            if (welcomeTextAnimationTimer) clearInterval(welcomeTextAnimationTimer);
+            const text = welcome.dataset.originalText || welcome.textContent.trim();
+            welcome.dataset.originalText = text;
+            welcome.setAttribute('aria-label', text);
+            if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+                welcome.textContent = text;
+                return;
+            }
+            const createCharacters = (className) => Array.from(text, character => {
+                const span = document.createElement('span');
+                span.className = `schedule-title-char welcome-text-char ${className}`;
+                span.textContent = character === ' ' ? '\u00a0' : character;
+                span.setAttribute('aria-hidden', 'true');
+                return span;
+            });
+            const showCharacters = () => {
+                const incoming = createCharacters('is-entering');
+                welcome.replaceChildren(...incoming);
+                requestAnimationFrame(() => incoming.forEach((span, index) => setTimeout(() => {
+                    span.classList.add('is-visible');
+                }, index * 72)));
+            };
+            showCharacters();
+            welcomeTextAnimationTimer = setInterval(() => {
+                const outgoing = [...welcome.querySelectorAll('.schedule-title-char')];
+                outgoing.forEach((span, index) => setTimeout(() => span.classList.add('is-leaving'), index * 36));
+                const exitDuration = 570 + Math.min(outgoing.length * 36, 360);
+                setTimeout(showCharacters, exitDuration);
+            }, 5000);
         }
         function toggleTimetableEditMode() {
             timetableEditMode=!timetableEditMode;
@@ -1213,13 +1273,68 @@
             try { localStorage.setItem('adkTheme', selectedTheme); } catch (error) { console.warn('테마 설정을 저장하지 못했습니다.', error); }
             document.querySelectorAll('[data-theme-choice]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.themeChoice === selectedTheme)));
         }
+        function setupSegmentedToggleDrag() {
+            document.querySelectorAll('.theme-picker').forEach(picker => {
+                const buttons = [...picker.querySelectorAll('.theme-choice')];
+                if (!buttons.length) return;
+                const indicator = document.createElement('span');
+                indicator.className = 'theme-picker-indicator';
+                indicator.setAttribute('aria-hidden', 'true');
+                picker.prepend(indicator);
+                const syncIndicator = (button = buttons.find(item => item.getAttribute('aria-pressed') === 'true')) => {
+                    if (!button) return;
+                    const pickerRect = picker.getBoundingClientRect();
+                    const buttonRect = button.getBoundingClientRect();
+                    indicator.style.left = `${buttonRect.left - pickerRect.left - picker.clientLeft}px`;
+                    indicator.style.width = `${buttonRect.width}px`;
+                };
+                let pointerId = null, startX = 0, dragging = false, suppressClickUntil = 0;
+                syncIndicator();
+                if (window.ResizeObserver) new ResizeObserver(() => syncIndicator()).observe(picker);
+                picker.addEventListener('click', event => {
+                    if (suppressClickUntil && Date.now() < suppressClickUntil && event.detail > 0) {
+                        event.preventDefault(); event.stopImmediatePropagation(); suppressClickUntil = 0; return;
+                    }
+                    requestAnimationFrame(() => syncIndicator());
+                }, true);
+                picker.addEventListener('pointerdown', event => {
+                    const activeButton = event.target.closest('.theme-choice[aria-pressed="true"]');
+                    if (!activeButton || (event.button !== undefined && event.button !== 0)) return;
+                    pointerId = event.pointerId; startX = event.clientX; dragging = false;
+                    picker.setPointerCapture(event.pointerId);
+                });
+                picker.addEventListener('pointermove', event => {
+                    if (event.pointerId !== pointerId) return;
+                    if (Math.abs(event.clientX - startX) > 4) { dragging = true; event.preventDefault(); }
+                    if (!dragging) return;
+                    const target = buttons.find(button => {
+                        const rect = button.getBoundingClientRect();
+                        return event.clientX >= rect.left && event.clientX <= rect.right;
+                    });
+                    if (target && target.getAttribute('aria-pressed') !== 'true') {
+                        target.click();
+                        syncIndicator(target);
+                    }
+                }, {passive:false});
+                const endDrag = event => {
+                    if (event.pointerId !== pointerId) return;
+                    if (dragging) suppressClickUntil = Date.now() + 120;
+                    pointerId = null; dragging = false;
+                    requestAnimationFrame(() => syncIndicator());
+                };
+                picker.addEventListener('pointerup', endDrag);
+                picker.addEventListener('pointercancel', endDrag);
+                picker.addEventListener('lostpointercapture', endDrag);
+                window.addEventListener('resize', () => syncIndicator());
+            });
+        }
         document.addEventListener('DOMContentLoaded', () => {
             updateAppViewportHeight();
             window.addEventListener('resize', updateAppViewportHeight, {passive:true});
             window.visualViewport?.addEventListener('resize', updateAppViewportHeight, {passive:true});
             window.visualViewport?.addEventListener('scroll', updateAppViewportHeight, {passive:true});
             window.addEventListener('orientationchange', updateAppViewportHeight, {passive:true});
-            setTheme(document.documentElement.dataset.theme || 'dark'); initTimetableShareOptions();
+            setTheme(document.documentElement.dataset.theme || 'dark'); initTimetableShareOptions(); setupSegmentedToggleDrag();
             registerPwa(); renderAssessmentTasks(); renderExamDdayWidget(); updateAssessmentNotificationButton(); checkAssessmentNotifications();
             assessmentNoticeTimer = setInterval(checkAssessmentNotifications, 60000);
             document.querySelectorAll('[data-theme-choice]').forEach(button => button.addEventListener('click', () => setTheme(button.dataset.themeChoice)));
@@ -1317,11 +1432,11 @@
             const obScreen = document.getElementById('onboarding-screen');
             obScreen.classList.remove('hidden');
             setTimeout(() => {
+                animateWelcomeText();
                 document.getElementById('setup-form').classList.remove('opacity-0', 'translate-y-4');
                 document.getElementById('setup-form').classList.add('opacity-100', 'translate-y-0');
             }, 1000);
         }
-
         async function saveUserInfo() {
             const name = document.getElementById('input-name').value;
             const grade = document.getElementById('input-grade').value;
@@ -1345,6 +1460,7 @@
             };
             localStorage.setItem('userConfig', JSON.stringify(userData));
             showInitialLoading();
+            if (welcomeTextAnimationTimer) clearInterval(welcomeTextAnimationTimer);
             document.getElementById('onboarding-screen').classList.add('hidden');
             applyUserData(userData);
             showMainApp();
@@ -2859,9 +2975,11 @@
                 if (extraMsgs.length > 0) {
                     briefText += "학교 수업이 없거나 모두 종료된 시간입니다. 😊\n" + extraMsgs.join(' ');
                 } else {
-                    briefText += "현재 진행 중인 수업이나 예정된 특별한 일정이 없습니다. 편안한 시간 보내세요. 😌\n";
+                    briefText += "오늘은 등록된 일정이 없어요! 편안한 하루 보내세요 🏖️\n";
                 }
             }
+
+            if (!todayMealBriefData) briefText += "오늘은 급식이 없는 날이에요! 맛있는 간식으로 에너지를 채워요 🍎" + String.fromCharCode(10);
 
             // --- 알러지 경고 메시지 병합 ---
             if (detectedAllergiesInMeal.length > 0) {
@@ -2947,24 +3065,54 @@
 
             if (dailyTimetableSchedules.length > 0) {
                 dailyTimetableSchedules.forEach(s => {
-                    addEventToTimeline(s.sh, s.sm, s.eh, s.em, s.title, s.color, s.id, false);
+                    const subject = String(s.officialSubject || s.title || '').replace(/^\[[^\]]+\]\s*/, '').trim();
+                    const subjectAssessments = subject && !String(s.title || '').startsWith('🍱')
+                        ? assessmentTasks.filter(task => task.dueDate === dateStr && task.subject.trim().toLocaleLowerCase() === subject.toLocaleLowerCase())
+                        : [];
+                    addEventToTimeline(s.sh, s.sm, s.eh, s.em, s.title, s.color, s.id, false, s.officialSubject || '', subjectAssessments);
                 });
             }
         }
-
-        function addEventToTimeline(startH, startM, endH, endM, title, colorClass, id, isCustom, officialSubject = '') {
+        function addEventToTimeline(startH, startM, endH, endM, title, colorClass, id, isCustom, officialSubject = '', assessments = []) {
             const slot = document.querySelector('.time-slot[data-hour="' + startH + '"]');
             if (!slot) return;
             const isMeal = String(title).startsWith('🍱');
+            const hasAssessments = !isMeal && Array.isArray(assessments) && assessments.length > 0;
             const totalMinutes = (endH * 60 + endM) - (startH * 60 + startM);
             const height = Math.max(10, totalMinutes - 2);
             const eventEl = document.createElement('div');
-            eventEl.className = 'timeline-event ' + colorClass + ' text-white font-medium shadow-md flex items-center' + (isMeal ? ' timeline-meal-event' : '');
+            eventEl.className = 'timeline-event ' + colorClass + ' text-white font-medium shadow-md flex items-center' + (isMeal ? ' timeline-meal-event' : hasAssessments ? ' timeline-assessment-event' : '');
             eventEl.style.height = height + 'px';
             eventEl.style.top = (startM + 1) + 'px';
             eventEl.dataset.customSchedule=String(!!isCustom); eventEl.dataset.eventTitle=String(title);
 
-            if (isMeal) {
+            if (hasAssessments) {
+                const main = document.createElement('div');
+                main.className = 'timeline-assessment-main';
+                const subjectLabel = document.createElement('span');
+                subjectLabel.className = 'drop-shadow-sm line-clamp-2 text-xs font-semibold';
+                subjectLabel.textContent = String(title);
+                main.appendChild(subjectLabel);
+                const panel = document.createElement('div');
+                panel.className = 'timeline-assessment-panel';
+                const panelTitle = document.createElement('span');
+                panelTitle.className = 'timeline-meal-menu-title';
+                panelTitle.textContent = '수행평가';
+                panel.appendChild(panelTitle);
+                const list = document.createElement('div');
+                list.className = 'timeline-meal-menu-list';
+                list.style.gridTemplateRows = `repeat(${Math.max(1, Math.floor((height - 28) / 15))}, minmax(0, 1fr))`;
+                list.style.gridAutoColumns = 'minmax(0, 1fr)';
+                assessments.forEach(task => {
+                    const line = document.createElement('span');
+                    line.className = 'timeline-meal-menu-item';
+                    line.textContent = `${task.done ? '✓' : '·'} ${task.title}`;
+                    line.title = task.title + (task.note ? ` — ${task.note}` : '');
+                    list.appendChild(line);
+                });
+                panel.appendChild(list);
+                eventEl.append(main, panel);
+            } else if (isMeal) {
                 const main = document.createElement('div');
                 main.className = 'timeline-meal-main';
                 const mealTitle = document.createElement('span');
@@ -3241,17 +3389,81 @@
         function renderModalScheduleList() {
             const list = document.getElementById('modal-schedule-list');
             const dateStr = formatDate(selectedModalDate);
-            const daySchedules = userCustomSchedules.filter(item => dateStr >= item.date && dateStr <= (item.endDate || item.date)).sort((a,b) => Number(a.start)-Number(b.start));
+            const customSchedules = userCustomSchedules
+                .filter(item => dateStr >= item.date && dateStr <= (item.endDate || item.date))
+                .sort((a, b) => Number(a.start) - Number(b.start));
+            const neisSchedules = neisSchedulesData
+                .filter(item => dateStr >= item.date && dateStr <= (item.endDate || item.date));
+            const dayAssessments = assessmentTasks
+                .filter(task => task.dueDate === dateStr)
+                .sort((a, b) => Number(!!a.done) - Number(!!b.done) || a.title.localeCompare(b.title, 'ko'));
             list.replaceChildren();
-            if(!daySchedules.length) { const empty=document.createElement('p'); empty.className='text-white/50 text-sm text-center py-4'; empty.textContent='등록된 일정이 없습니다.'; list.appendChild(empty); return; }
-            daySchedules.forEach(item => {
-                const row=document.createElement('div'); row.className='bg-white/10 rounded-xl p-3 flex justify-between items-center border border-white/10 cursor-pointer hover:bg-white/20 transition';
-                row.addEventListener('click',()=>openScheduleModal(new Date(`${dateStr}T12:00:00`),item.id));
-                const info=document.createElement('div'); const meta=document.createElement('div'); meta.className='text-xs text-white/70 mb-1'; meta.textContent=item.date!==(item.endDate||item.date)?'연속 일정':`${item.start}:00 ~ ${item.end}:00`;
-                const title=document.createElement('div'); title.className='text-sm font-semibold'; title.textContent=item.title; info.append(meta,title);
-                const remove=document.createElement('button'); remove.type='button'; remove.className='text-red-400 hover:text-red-300 text-xs bg-red-500/20 px-2 py-1 rounded'; remove.textContent='삭제'; remove.addEventListener('click',event=>{event.stopPropagation();deleteModalSchedule(item.id);});
-                row.append(info,remove); list.appendChild(row);
+
+            const addSection = (title, items, renderItem) => {
+                if (!items.length) return;
+                const section = document.createElement('section');
+                section.className = 'space-y-2';
+                const heading = document.createElement('h4');
+                heading.className = 'text-xs font-bold text-white/50 uppercase tracking-wide pt-1';
+                heading.textContent = title;
+                section.appendChild(heading);
+                items.forEach(item => section.appendChild(renderItem(item)));
+                list.appendChild(section);
+            };
+            const makeRow = (className, metaText, titleText, detailText = '') => {
+                const row = document.createElement('div');
+                row.className = className;
+                const meta = document.createElement('div');
+                meta.className = 'text-xs text-white/60 mb-1';
+                meta.textContent = metaText;
+                const title = document.createElement('div');
+                title.className = 'text-sm font-semibold';
+                title.textContent = titleText;
+                row.append(meta, title);
+                if (detailText) {
+                    const detail = document.createElement('div');
+                    detail.className = 'text-xs text-white/60 mt-1 whitespace-pre-wrap';
+                    detail.textContent = detailText;
+                    row.appendChild(detail);
+                }
+                return row;
+            };
+
+            addSection('내 일정', customSchedules, item => {
+                const row = document.createElement('div');
+                row.className = 'bg-white/10 rounded-xl p-3 flex justify-between items-center border border-white/10 cursor-pointer hover:bg-white/20 transition';
+                row.addEventListener('click', () => openScheduleModal(new Date(`${dateStr}T12:00:00`), item.id));
+                const info = document.createElement('div');
+                const meta = document.createElement('div');
+                meta.className = 'text-xs text-white/70 mb-1';
+                meta.textContent = item.date !== (item.endDate || item.date) ? '연속 일정' : `${item.start}:00 ~ ${item.end}:00`;
+                const title = document.createElement('div');
+                title.className = 'text-sm font-semibold';
+                title.textContent = item.title;
+                info.append(meta, title);
+                const remove = document.createElement('button');
+                remove.type = 'button';
+                remove.className = 'text-red-400 hover:text-red-300 text-xs bg-red-500/20 px-2 py-1 rounded';
+                remove.textContent = '삭제';
+                remove.addEventListener('click', event => { event.stopPropagation(); deleteModalSchedule(item.id); });
+                row.append(info, remove);
+                return row;
             });
+            addSection('학사 일정', neisSchedules, item => {
+                const range = item.date === (item.endDate || item.date) ? '' : `${item.date} ~ ${item.endDate}`;
+                return makeRow('bg-white/5 rounded-xl p-3', range || '나이스 학사 일정', item.title, item.description || '');
+            });
+            addSection('수행평가', dayAssessments, task => {
+                const detail = [task.subject, task.done ? '완료' : '미완료', task.note].filter(Boolean).join(' · ');
+                return makeRow('bg-white/5 rounded-xl p-3', '마감일', task.title, detail);
+            });
+
+            if (!customSchedules.length && !neisSchedules.length && !dayAssessments.length) {
+                const empty = document.createElement('p');
+                empty.className = 'text-white/50 text-sm text-center py-4';
+                empty.textContent = '등록된 일정이 없습니다.';
+                list.appendChild(empty);
+            }
         }
         function deleteModalSchedule(id) {
             userCustomSchedules=userCustomSchedules.filter(item=>item.id!==id);
