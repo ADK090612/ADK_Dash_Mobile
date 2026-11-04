@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="light only">
     <meta name="supported-color-schemes" content="light">
-    <meta name="theme-color" content="#111827"><link rel="manifest" href="./manifest.json"><link rel="icon" href="./icon.png" type="image/png">
+    <meta name="theme-color" content="#111827"><link rel="manifest" href="./manifest.json"><link rel="icon" href="https://adk090612.github.io/cast_stanby/icon.png" type="image/png">
     <title>ADK 대시보드</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet">
@@ -335,12 +335,21 @@
             transition: transform .42s cubic-bezier(.22,.68,0,1.05), opacity .28s ease;
             will-change: transform, opacity;
         }
-        .bottom-nav.edit-mode-hidden { transform: translate(-50%, calc(100% + 32px)); opacity: 0; pointer-events: none; }
+        .bottom-nav.edit-mode-hidden, .bottom-nav.scroll-hidden { transform: translate(-50%, calc(100% + 32px)); opacity: 0; pointer-events: none; }
         @media (prefers-reduced-motion: reduce) { #timetable-actions, #timetable-actions button, .bottom-nav { transition-duration: .01ms; } }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: white; font-size: 0.7rem; transition: all 0.3s ease; position: relative; z-index: 10; padding: 8px 16px; flex: 1; }
         #nav-indicator { position: absolute; top: 8px; bottom: 8px; background: rgba(0, 0, 0, 0.4); border-radius: 9999px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 0; box-shadow: inset 0 1px 4px rgba(0,0,0,0.5); }
         #nav-indicator.dragging { transition: none; cursor: grabbing; }
         #nav-indicator { pointer-events: none; }
+        .assessment-checklist { padding: 8px; transition: padding .3s ease, border-radius .3s ease; }
+        .assessment-checklist.expanded { padding: 14px 18px 18px; border-radius: 24px; }
+        .assessment-checklist-toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 42px; padding: 8px 12px; border-radius: 9999px; text-align: left; font-weight: 600; }
+        .assessment-checklist-expand-icon { display: grid; width: 28px; height: 28px; flex: 0 0 28px; place-items: center; border-radius: 9999px; background: rgba(255,255,255,.14); font-size: 1.25rem; line-height: 1; transition: transform .3s ease, background-color .25s ease; }
+        .assessment-checklist.expanded .assessment-checklist-expand-icon { transform: rotate(45deg); }
+        .assessment-checklist-content { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows .3s ease, opacity .2s ease; }
+        .assessment-checklist.expanded .assessment-checklist-content { grid-template-rows: 1fr; opacity: 1; }
+        .assessment-checklist-inner { min-height: 0; overflow: hidden; }
+        @media (prefers-reduced-motion: reduce) { .assessment-checklist, .assessment-checklist-expand-icon, .assessment-checklist-content { transition-duration: .01ms; } }
         .region-loading-host { position: relative !important; }
         .region-loading-host.region-is-loading { min-height: 76px; }
         .region-loading-overlay { position: absolute; inset: 0; z-index: 35; display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 76px; border-radius: inherit; background: rgba(8,12,20,.72); backdrop-filter: blur(7px); -webkit-backdrop-filter: blur(7px); color: rgba(255,255,255,.82); font-size: .78rem; pointer-events: none; }
@@ -590,7 +599,24 @@
             <div id="calendar-scroll-area" class="liquid-glass card p-5 flex-1 overflow-y-auto hide-scrollbar relative anim-box d-1" onscroll="handleCalendarScroll()">
             </div>
 
-            <section class="liquid-glass card p-5 anim-box d-3 mt-4 mb-4"><div class="flex flex-wrap justify-between items-center gap-2 mb-3"><div class="min-w-0"><h3 class="text-lg font-semibold">수행평가 체크리스트</h3><p class="text-xs text-white/50">과목별 제출일을 관리해요</p></div><div class="flex gap-2"><button id="assessment-notification-toggle" type="button" onclick="toggleAssessmentNotifications()" class="action-button rounded-full px-3 py-2 text-xs inline-flex items-center gap-1.5" aria-label="수행평가 알림 끔" title="수행평가 알림 끔" aria-pressed="false"><svg class="assessment-bell-on w-4 h-4 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><svg class="assessment-bell-off w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-9.8-4.6M6 8c0 7-3 7-3 9h13"/><path d="M10 21h4M3 3l18 18"/></svg><span class="assessment-notification-label">알림 끔</span></button><button onclick="openAssessmentModal()" class="action-button rounded-full px-3 py-2 text-sm">+ 추가</button></div></div><ul id="assessment-task-list" class="space-y-2"></ul></section>
+            <section id="assessment-checklist" class="assessment-checklist liquid-glass card anim-box d-3 mt-4 mb-4">
+                <button id="assessment-checklist-toggle" type="button" class="assessment-checklist-toggle" onclick="toggleAssessmentChecklist()" aria-expanded="false" aria-controls="assessment-checklist-content">
+                    <span>수행평가 체크리스트</span>
+                    <span class="assessment-checklist-expand-icon" aria-hidden="true">+</span>
+                </button>
+                <div id="assessment-checklist-content" class="assessment-checklist-content" aria-hidden="true" inert>
+                    <div class="assessment-checklist-inner">
+                        <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+                            <p class="text-xs text-white/50">과목별 제출일을 관리해요</p>
+                            <div class="flex gap-2">
+                                <button id="assessment-notification-toggle" type="button" onclick="toggleAssessmentNotifications()" class="action-button rounded-full px-3 py-2 text-xs inline-flex items-center gap-1.5" aria-label="수행평가 알림 끔" title="수행평가 알림 끔" aria-pressed="false"><svg class="assessment-bell-on w-4 h-4 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><svg class="assessment-bell-off w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-9.8-4.6M6 8c0 7-3 7-3 9h13"/><path d="M10 21h4M3 3l18 18"/></svg><span class="assessment-notification-label">알림 끔</span></button>
+                                <button onclick="openAssessmentModal()" class="action-button rounded-full px-3 py-2 text-sm">+ 추가</button>
+                            </div>
+                        </div>
+                        <ul id="assessment-task-list" class="space-y-2"></ul>
+                    </div>
+                </div>
+            </section>
         </div>
 
         <div id="tab-account" class="tab-content hidden pb-10">
@@ -1018,6 +1044,7 @@
         function persistAssessmentTasks(){try{localStorage.setItem("assessmentTasks",JSON.stringify(assessmentTasks));renderAssessmentTasks();renderExamDdayWidget();return true;}catch(e){showCustomModal({message:"저장 공간이 부족해 저장하지 못했습니다."});return false;}}
         function openAssessmentModal(id=""){const t=assessmentTasks.find(x=>x.id===id);document.getElementById("assessment-form").reset();document.getElementById("assessment-edit-id").value=t?t.id:"";document.getElementById("assessment-title").value=t?t.title:"";document.getElementById("assessment-subject").value=t?(t.subject||""):"";document.getElementById("assessment-note").value=t?(t.note||""):"";document.getElementById("assessment-due").value=t?t.dueDate:localDayKey();document.getElementById("assessment-heading-modal").textContent=t?"수행평가 수정":"수행평가 추가";const m=document.getElementById("assessment-modal");m.classList.remove("hidden");requestAnimationFrame(()=>m.classList.remove("opacity-0"));}
         function closeAssessmentModal(){const m=document.getElementById("assessment-modal");m.classList.add("opacity-0");setTimeout(()=>m.classList.add("hidden"),300);}
+        function toggleAssessmentChecklist(){const section=document.getElementById("assessment-checklist"),toggle=document.getElementById("assessment-checklist-toggle"),content=document.getElementById("assessment-checklist-content");if(!section||!toggle||!content)return;const expanded=section.classList.toggle("expanded");toggle.setAttribute("aria-expanded",String(expanded));content.setAttribute("aria-hidden",String(!expanded));if(expanded)content.removeAttribute("inert");else content.setAttribute("inert","");}
         function saveAssessmentTask(e){e.preventDefault();const title=document.getElementById("assessment-title").value.trim().slice(0,160),subject=document.getElementById("assessment-subject").value.trim().slice(0,100),note=document.getElementById("assessment-note").value.trim().slice(0,1000),dueDate=document.getElementById("assessment-due").value,id=document.getElementById("assessment-edit-id").value;if(!title||!isValidISODate(dueDate)){showCustomModal({message:"내용과 올바른 마감일을 입력해주세요."});return;}const t={id:id||("task_"+Date.now()),title,subject,note,dueDate,done:!!assessmentTasks.find(x=>x.id===id)?.done};if(id)assessmentTasks=assessmentTasks.map(x=>x.id===id?t:x);else assessmentTasks.push(t);if(persistAssessmentTasks()){closeAssessmentModal();renderTimelineSchedules(selectedDashboardDate);checkAssessmentNotifications();}}
         function renderExamDdayWidget() {
             const host=document.getElementById('home-dday-list'); if(!host) return;
@@ -1037,11 +1064,47 @@
             if(!exams.length&&!urgent.length){const empty=document.createElement('div');empty.className='text-xs text-white/50';empty.textContent='시험 일정이나 임박한 수행평가가 없습니다.';host.append(empty);return;}
             exams.forEach(item=>{const days=Math.round((new Date(item.date+'T12:00:00')-new Date(today+'T12:00:00'))/86400000);const row=document.createElement('div');row.className='liquid-glass pill flex justify-between px-3 py-2 text-sm';const title=document.createElement('span');title.textContent=item.title;const badge=document.createElement('b');badge.className='text-emerald-200';badge.textContent=days===0?'D-DAY':item.date<today?'진행 중':'D-'+days;row.append(title,badge);host.append(row);});
         }
-        function setBottomNavEditHidden(hidden) {
+        let bottomNavEditHidden = false;
+        let bottomNavScrollHidden = false;
+        let bottomNavScrollTimer = null;
+        function updateBottomNavVisibility() {
             const nav=document.getElementById('bottom-navigation'); if(!nav) return;
-            nav.classList.toggle('edit-mode-hidden',!!hidden); nav.setAttribute('aria-hidden',String(!!hidden));
+            const hidden=bottomNavEditHidden||bottomNavScrollHidden;
+            nav.classList.toggle('edit-mode-hidden',bottomNavEditHidden);
+            nav.classList.toggle('scroll-hidden',bottomNavScrollHidden);
+            nav.setAttribute('aria-hidden',String(hidden));
             nav.querySelectorAll('.nav-item').forEach(item=>item.tabIndex=hidden?-1:0);
         }
+        function setBottomNavEditHidden(hidden) {
+            bottomNavEditHidden=!!hidden;
+            updateBottomNavVisibility();
+        }
+        function setBottomNavScrollHidden(hidden) {
+            bottomNavScrollHidden=!!hidden;
+            clearTimeout(bottomNavScrollTimer);
+            if(bottomNavScrollHidden) bottomNavScrollTimer=setTimeout(()=>{bottomNavScrollHidden=false;updateBottomNavVisibility();},1000);
+            updateBottomNavVisibility();
+        }
+        function setupBottomNavScrollBehavior() {
+            const areas=[document.getElementById('main-app'),document.getElementById('timeline-wrapper'),document.getElementById('calendar-scroll-area')].filter(Boolean);
+            areas.forEach(area=>{
+                area.addEventListener('wheel',event=>{
+                    if(Math.abs(event.deltaY)>Math.abs(event.deltaX)&&Math.abs(event.deltaY)>2)setBottomNavScrollHidden(event.deltaY>0);
+                },{passive:true});
+                let touchY=null;
+                area.addEventListener('touchstart',event=>{touchY=event.touches[0]?.clientY??null;},{passive:true});
+                area.addEventListener('touchmove',event=>{
+                    const currentY=event.touches[0]?.clientY;
+                    if(touchY===null||currentY===undefined)return;
+                    const delta=touchY-currentY;
+                    if(Math.abs(delta)>2){setBottomNavScrollHidden(delta>0);touchY=currentY;}
+                },{passive:true});
+                const resetTouch=()=>{touchY=null;};
+                area.addEventListener('touchend',resetTouch,{passive:true});
+                area.addEventListener('touchcancel',resetTouch,{passive:true});
+            });
+        }
+        document.addEventListener('DOMContentLoaded',setupBottomNavScrollBehavior,{once:true});
         let timetableEditMode = false;
         function readTimetableOverrides() { try { const value=JSON.parse(localStorage.getItem('customTimetableOverrides')||'{}'); return value&&typeof value==='object'&&!Array.isArray(value)?value:{}; } catch (_) { return {}; } }
         function timetableOverrideKey(period, config=null) { const user=config || readUserConfig(); return `${user?.regionCode||DEFAULT_REGION_CODE}:${user?.schoolCode||DEFAULT_SCHOOL_CODE}:${user?.grade||''}:${user?.class||''}:${selectedDashboardDate.getDay()}:${period}`; }
@@ -1507,6 +1570,7 @@
         /* --- 탭 기능 및 타임라인 정렬 --- */
         function switchTab(tabId, element) {
             if(tabId !== 'timetable') closeTimetableShareMenu();
+            setBottomNavScrollHidden(false);
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.getElementById('tab-' + tabId).classList.remove('hidden');
             
