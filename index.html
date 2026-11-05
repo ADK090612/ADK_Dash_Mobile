@@ -607,7 +607,7 @@
                 <div id="assessment-checklist-content" class="assessment-checklist-content" aria-hidden="true" inert>
                     <div class="assessment-checklist-inner">
                         <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
-                            <p class="text-xs text-white/50">과목별 제출일을 관리해요</p>
+                            <p class="text-xs text-white/50"></p>
                             <div class="flex gap-2">
                                 <button id="assessment-notification-toggle" type="button" onclick="toggleAssessmentNotifications()" class="action-button rounded-full px-3 py-2 text-xs inline-flex items-center gap-1.5" aria-label="수행평가 알림 끔" title="수행평가 알림 끔" aria-pressed="false"><svg class="assessment-bell-on w-4 h-4 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><svg class="assessment-bell-off w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-9.8-4.6M6 8c0 7-3 7-3 9h13"/><path d="M10 21h4M3 3l18 18"/></svg><span class="assessment-notification-label">알림 끔</span></button>
                                 <button onclick="openAssessmentModal()" class="action-button rounded-full px-3 py-2 text-sm">+ 추가</button>
@@ -632,7 +632,7 @@
                 </div>
 
                 <div class="liquid-glass card overflow-hidden anim-box d-2">
-                    <div class="px-5 py-3 text-xs font-bold text-white/50 bg-black/10 border-b border-white/10 uppercase tracking-wider">사용자 정보 (클릭하여 수정)</div>
+                    <div class="px-5 py-3 text-xs font-bold text-white/50 bg-black/10 border-b border-white/10 uppercase tracking-wider">사용자 정보</div>
                     <div class="px-5 py-4 flex justify-between items-center border-b border-white/10 cursor-pointer hover:bg-white/5 transition" onclick="editSetting('name')">
                         <span class="font-medium">이름</span>
                         <span class="text-white/70" id="set-info-name">이름</span>
@@ -650,7 +650,7 @@
                         <span class="text-white/70">></span>
                     </div>
                     <div class="px-5 py-4 flex justify-between items-center gap-3">
-                        <div><div class="font-medium">테마</div><div class="text-white/50 text-xs mt-1">화면 밝기를 선택하세요</div></div>
+                        <div><div class="font-medium">테마</div><div class="text-white/50 text-xs mt-1"></div></div>
                         <div class="theme-picker shrink-0" role="group" aria-label="화면 테마 설정">
                             <button type="button" class="theme-choice" data-theme-choice="dark" aria-pressed="true">다크</button>
                             <button type="button" class="theme-choice" data-theme-choice="light" aria-pressed="false">라이트</button>
@@ -658,9 +658,9 @@
                     </div>
                     <div class="px-5 py-4 border-t border-white/10">
                         <div class="font-medium">일일 스케줄 공유 항목</div>
-                        <div class="text-white/50 text-xs mt-1 mb-3">일정표에는 오늘의 급식 메뉴가 포함됩니다.</div>
+                        <div class="text-white/50 text-xs mt-1 mb-3"></div>
                         <div class="flex flex-col text-sm">
-                            <div class="share-setting-row"><span>오늘의 수행평가 (이름·과목·메모·완료 여부)</span><div class="theme-picker share-toggle-picker" role="group" aria-label="수행평가 공유"><button type="button" class="theme-choice" data-share-target="share-include-assessments" data-share-value="on" aria-pressed="false">ON</button><button type="button" class="theme-choice" data-share-target="share-include-assessments" data-share-value="off" aria-pressed="true">OFF</button></div><input id="share-include-assessments" type="checkbox" class="sr-only" tabindex="-1" aria-hidden="true"></div>
+                            <div class="share-setting-row"><span>오늘의 수행평가</span><div class="theme-picker share-toggle-picker" role="group" aria-label="수행평가 공유"><button type="button" class="theme-choice" data-share-target="share-include-assessments" data-share-value="on" aria-pressed="false">ON</button><button type="button" class="theme-choice" data-share-target="share-include-assessments" data-share-value="off" aria-pressed="true">OFF</button></div><input id="share-include-assessments" type="checkbox" class="sr-only" tabindex="-1" aria-hidden="true"></div>
                             <div class="share-setting-row"><span>현재 날씨</span><div class="theme-picker share-toggle-picker" role="group" aria-label="날씨 공유"><button type="button" class="theme-choice" data-share-target="share-include-weather" data-share-value="on" aria-pressed="false">ON</button><button type="button" class="theme-choice" data-share-target="share-include-weather" data-share-value="off" aria-pressed="true">OFF</button></div><input id="share-include-weather" type="checkbox" class="sr-only" tabindex="-1" aria-hidden="true"></div>
                         </div>
                     </div>
@@ -1647,11 +1647,17 @@
             let activePointerId = null;
             let dragStartX = 0;
             let dragStartLeft = 0;
-            const selectNavItemAt = (clientX) => {
-                const item = [...nav.querySelectorAll('.nav-item')].find(candidate => {
+            let lastNavItemUnderPointer = null;
+            const getNavItemAt = (clientX) => [...nav.querySelectorAll('.nav-item')].find(candidate => {
                     const rect = candidate.getBoundingClientRect();
                     return clientX >= rect.left && clientX <= rect.right;
                 });
+            const selectNavItemAt = (clientX) => {
+                const item = getNavItemAt(clientX);
+                if(item && item !== lastNavItemUnderPointer) {
+                    if(lastNavItemUnderPointer && typeof navigator.vibrate === 'function') navigator.vibrate(10);
+                    lastNavItemUnderPointer = item;
+                }
                 if(item && !item.classList.contains('active')) {
                     const match = item.getAttribute('onclick')?.match(/switchTab\('([^']+)'/);
                     if(match) switchTab(match[1], item);
@@ -1665,6 +1671,7 @@
                 activePointerId = event.pointerId;
                 dragStartX = event.clientX;
                 dragStartLeft = indicator.offsetLeft;
+                lastNavItemUnderPointer = activeItem;
                 indicator.classList.add('dragging');
                 nav.setPointerCapture(event.pointerId);
                 event.preventDefault();
@@ -1679,6 +1686,7 @@
             const endDrag = (event) => {
                 if(event.pointerId !== activePointerId) return;
                 activePointerId = null;
+                lastNavItemUnderPointer = null;
                 indicator.classList.remove('dragging');
                 updateNavIndicator(nav.querySelector('.nav-item.active'));
             };
