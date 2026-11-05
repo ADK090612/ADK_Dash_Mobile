@@ -3262,6 +3262,7 @@
         // --- 캘린더 기능 ---
         function initCalendar() {
             const now = new Date();
+            lastCalendarSettledMonthKey = `${now.getFullYear()}-${now.getMonth()}`;
             const scrollArea = document.getElementById('calendar-scroll-area');
             const months = [];
             for(let i = -12; i <= 12; i++) {
@@ -3289,7 +3290,6 @@
 
         function generateMonthHTML(y, m, id) {
             let html = `<div id="${id}" class="cal-month-section" data-year="${y}" data-month="${m}">`;
-            html += `<div class="text-center font-bold text-xl mb-4 text-white/80">${y}년 ${m + 1}월</div>`;
             html += `<div class="cal-grid text-sm mb-2 font-semibold"><div class="text-red-400">일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div class="text-blue-400">토</div></div><div class="cal-grid cal-days-grid">`;
 
             let firstDay = new Date(y, m, 1).getDay();
@@ -3313,6 +3313,7 @@
         }
 
         let scrollTimeout;
+        let lastCalendarSettledMonthKey = null;
         function handleCalendarScroll() {
             if(scrollTimeout) clearTimeout(scrollTimeout);
             scrollTimeout = setTimeout(() => {
@@ -3323,8 +3324,14 @@
                     const diff = Math.abs(areaCenter - (sec.getBoundingClientRect().top + (sec.getBoundingClientRect().height / 2)));
                     if(diff < minDiff) { minDiff = diff; closest = sec; }
                 });
-                if(closest) document.getElementById('cal-current-indicator').textContent = `${closest.getAttribute('data-year')}년 ${parseInt(closest.getAttribute('data-month'))+1}월`;
-            }, 50);
+                if(closest) {
+                    const year=closest.getAttribute('data-year'), month=closest.getAttribute('data-month');
+                    const monthKey=`${year}-${month}`;
+                    document.getElementById('cal-current-indicator').textContent = `${year}년 ${parseInt(month)+1}월`;
+                    if(lastCalendarSettledMonthKey!==null&&monthKey!==lastCalendarSettledMonthKey&&typeof navigator.vibrate==='function') navigator.vibrate(10);
+                    lastCalendarSettledMonthKey=monthKey;
+                }
+            }, 100);
         }
 
         function scrollToCurrentMonth() {
